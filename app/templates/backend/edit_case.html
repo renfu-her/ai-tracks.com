@@ -46,6 +46,52 @@
                 </label>
             </div>
             
+            <!-- Case Photos Management -->
+            <div class="mb-4">
+                <label class="form-label">案例圖片</label>
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Upload Area -->
+                        <div class="mb-3">
+                            <label for="photoUpload" class="form-label">上傳圖片</label>
+                            <input type="file" class="form-control" id="photoUpload" accept="image/*" multiple>
+                            <small class="form-text text-muted">支援 JPG、PNG、GIF 格式，圖片會自動轉換為 WebP 格式</small>
+                        </div>
+                        
+                        <!-- Photos List -->
+                        <div id="photosList" class="row g-3">
+                            {% for photo in photos %}
+                            <div class="col-md-3 photo-item" data-photo-id="{{ photo.id }}">
+                                <div class="card">
+                                    <img src="{{ photo.image|storage_url }}" class="card-img-top" alt="Photo" style="height: 150px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted sort-order-display">排序: {{ photo.sort_order }}</small>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary btn-move-up" title="上移">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary btn-move-down" title="下移">
+                                                    <i class="fas fa-arrow-down"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-delete-photo" title="刪除">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div id="noPhotosMessage" class="text-muted text-center py-3" {% if case.case_photos.count() > 0 %}style="display: none;"{% endif %}>
+                            尚無圖片，請上傳圖片
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="d-flex justify-content-end gap-2">
                 <a href="{{ url_for('backend.cases') }}" class="btn btn-secondary">取消</a>
                 <button type="submit" class="btn btn-primary">更新</button>
@@ -90,6 +136,168 @@ $(document).ready(function() {
             }
         });
     }
+    
+    // Case Photos Management
+    const caseId = {{ case.id }};
+    let photos = [];
+    
+    // Load existing photos
+    function loadPhotos() {
+        photos = [];
+        $('.photo-item').each(function() {
+            const photoId = $(this).data('photo-id');
+            const sortOrder = parseInt($(this).find('.photo-item').index());
+            if (photoId) {
+                photos.push({
+                    id: photoId,
+                    sort_order: $(this).index()
+                });
+            }
+        });
+    }
+    
+    // Initialize photos array
+    loadPhotos();
+    
+    // Photo upload handler
+    $('#photoUpload').on('change', function() {
+        const files = this.files;
+        if (files.length === 0) return;
+        
+        let uploadCount = 0;
+        const totalFiles = files.length;
+        
+        // Upload each file separately
+        for (let i = 0; i < files.length; i++) {
+            const formData = new FormData();
+            formData.append('photo', files[i]);
+            
+            $.ajax({
+                url: `{{ url_for('backend.upload_case_photo', case_id=case.id) }}`,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': window.csrfToken()
+                },
+                success: function(response) {
+                    uploadCount++;
+                    if (response.success) {
+                        if (uploadCount === totalFiles) {
+                            // All files uploaded, reload page
+                            location.reload();
+                        }
+                    } else {
+                        alert(response.message || '上傳失敗');
+                    }
+                },
+                error: function() {
+                    uploadCount++;
+                    alert('上傳失敗，請重試');
+                }
+            });
+        }
+    });
+    
+    // Delete photo handler
+    $(document).on('click', '.btn-delete-photo', function() {
+        const photoItem = $(this).closest('.photo-item');
+        const photoId = photoItem.data('photo-id');
+        
+        if (!confirm('確定要刪除此圖片嗎？')) return;
+        
+        $.ajax({
+            url: `{{ url_for('backend.delete_case_photo', case_id=case.id, photo_id=0) }}`.replace('/0/', '/' + photoId + '/'),
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': window.csrfToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    photoItem.remove();
+                    loadPhotos();
+                    updatePhotoDisplay();
+                } else {
+                    alert(response.message || '刪除失敗');
+                }
+            },
+            error: function() {
+                alert('刪除失敗，請重試');
+            }
+        });
+    });
+    
+    // Move up handler
+    $(document).on('click', '.btn-move-up', function() {
+        const photoItem = $(this).closest('.photo-item');
+        const prevItem = photoItem.prev('.photo-item');
+        if (prevItem.length > 0) {
+            photoItem.insertBefore(prevItem);
+            updatePhotoOrder();
+        }
+    });
+    
+    // Move down handler
+    $(document).on('click', '.btn-move-down', function() {
+        const photoItem = $(this).closest('.photo-item');
+        const nextItem = photoItem.next('.photo-item');
+        if (nextItem.length > 0) {
+            photoItem.insertAfter(nextItem);
+            updatePhotoOrder();
+        }
+    });
+    
+    // Update photo order
+    function updatePhotoOrder() {
+        const orders = [];
+        $('.photo-item').each(function(index) {
+            const photoId = $(this).data('photo-id');
+            if (photoId) {
+                orders.push({
+                    id: photoId,
+                    sort_order: index
+                });
+            }
+        });
+        
+        $.ajax({
+            url: `{{ url_for('backend.update_case_photo_order', case_id=case.id) }}`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ orders: orders }),
+            headers: {
+                'X-CSRFToken': window.csrfToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update sort order display
+                    $('.photo-item').each(function(index) {
+                        $(this).find('.sort-order-display').text('排序: ' + index);
+                    });
+                } else {
+                    alert(response.message || '排序更新失敗');
+                    location.reload();
+                }
+            },
+            error: function() {
+                alert('排序更新失敗，請重試');
+                location.reload();
+            }
+        });
+    }
+    
+    // Update photo display
+    function updatePhotoDisplay() {
+        if ($('.photo-item').length === 0) {
+            $('#noPhotosMessage').show();
+        } else {
+            $('#noPhotosMessage').hide();
+        }
+    }
+    
+    // Initialize display
+    updatePhotoDisplay();
     
     // Sync editor content before form submit
     $('form').on('submit', function(e) {

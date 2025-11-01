@@ -45,17 +45,19 @@
             {% for case in cases.items %}
             <div class="col-lg-4 col-md-6 mb-4 case-item">
                 <div class="card h-100 shadow-sm border-0 hover-lift">
-                    {% if case.case_photos.count() > 0 %}
+                    {% set first_photo = case.get_first_image() %}
+                    {% if first_photo %}
                     <div class="position-relative">
-                        <img src="{{ case.case_photos.first().image|storage_url }}"
+                        <img src="{{ first_photo.image|storage_url }}"
                              class="card-img-top" alt="{{ case.name }}"
                              style="height: 250px; object-fit: cover;">
                     </div>
                     {% else %}
                     <div class="position-relative">
-                        <img src="https://via.placeholder.com/400x250/f8f9fa/6c757d?text=No+Image"
+                        <img src="{{ url_for('static', filename='images/default-case.jpg') }}"
                              class="card-img-top" alt="No Image"
-                             style="height: 250px; object-fit: cover;">
+                             style="height: 250px; object-fit: cover;"
+                             onerror="this.src='{{ url_for('static', filename='images/default-case.jpg') }}';">
                     </div>
                     {% endif %}
 

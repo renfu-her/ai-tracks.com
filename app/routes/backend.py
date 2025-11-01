@@ -92,6 +92,30 @@ def create_case():
     return BackendManagementController.create_case()
 
 
+@backend_bp.route('/cases/<int:case_id>/photos/upload', methods=['POST'])
+@login_required
+@admin_required
+def upload_case_photo(case_id):
+    """Upload case photo."""
+    return BackendManagementController.upload_case_photo(case_id)
+
+
+@backend_bp.route('/cases/<int:case_id>/photos/<int:photo_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_case_photo(case_id, photo_id):
+    """Delete case photo."""
+    return BackendManagementController.delete_case_photo(case_id, photo_id)
+
+
+@backend_bp.route('/cases/<int:case_id>/photos/order', methods=['POST'])
+@login_required
+@admin_required
+def update_case_photo_order(case_id):
+    """Update case photo order."""
+    return BackendManagementController.update_case_photo_order(case_id)
+
+
 @backend_bp.route('/cases/<int:case_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required

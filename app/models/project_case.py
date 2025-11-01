@@ -1,6 +1,7 @@
 """ProjectCase model."""
 from datetime import datetime
 from app import db
+from app.models.case_photo import CasePhoto
 
 
 class ProjectCase(db.Model):
@@ -20,6 +21,37 @@ class ProjectCase(db.Model):
     # Relationships
     case_photos = db.relationship('CasePhoto', backref='project_case', lazy='dynamic', 
                                    cascade='all, delete-orphan', order_by='CasePhoto.sort_order')
+    
+    def get_first_image(self, default_image=None):
+        """
+        Get the first image ordered by sort_order.
+        
+        Args:
+            default_image: Default image path if no photos exist
+            
+        Returns:
+            CasePhoto object or None
+        """
+        first_photo = self.case_photos.order_by(CasePhoto.sort_order).first()
+        return first_photo if first_photo else None
+    
+    def get_first_image_url(self, default_image='images/default-case.jpg'):
+        """
+        Get the URL of the first image, or default image if none exists.
+        
+        Args:
+            default_image: Default image path relative to static folder
+            
+        Returns:
+            Image URL string
+        """
+        first_photo = self.get_first_image()
+        if first_photo:
+            from app.utils.helpers import storage_url
+            return storage_url(first_photo.image)
+        else:
+            from flask import url_for
+            return url_for('static', filename=default_image)
     
     def __repr__(self):
         return f'<ProjectCase {self.name}>'

@@ -178,6 +178,21 @@
                             啟用
                         </label>
                     </div>
+                    
+                    <!-- Case Photos Management -->
+                    <div class="mb-3">
+                        <label class="form-label">案例圖片</label>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="photosUpload" class="form-label">上傳圖片</label>
+                                    <input type="file" class="form-control" id="photosUpload" name="photos[]" accept="image/*" multiple>
+                                    <small class="form-text text-muted">支援 JPG、PNG、GIF 格式，圖片會自動轉換為 WebP 格式。可上傳多張圖片，第一張圖片將作為封面圖。</small>
+                                </div>
+                                <div id="uploadedPhotosPreview" class="row g-2"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>

@@ -25,17 +25,18 @@
         <div class="row">
             <div class="col-lg-8">
                 <!-- Case Photos Carousel -->
-                {% if case.case_photos.count() > 0 %}
+                {% set photos = case.case_photos.all() %}
+                {% if photos|length > 0 %}
                 <div id="casePhotosCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
                     <div class="carousel-inner">
-                        {% for photo in case.case_photos.all() %}
+                        {% for photo in photos %}
                         <div class="carousel-item {% if loop.first %}active{% endif %}">
                             <img src="{{ photo.image|storage_url }}" class="d-block w-100" alt="{{ case.name }}"
                                  style="max-height: 500px; object-fit: contain; background: #f8f9fa;">
                         </div>
                         {% endfor %}
                     </div>
-                    {% if case.case_photos.count() > 1 %}
+                    {% if photos|length > 1 %}
                     <button class="carousel-control-prev" type="button" data-bs-target="#casePhotosCarousel" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Previous</span>
@@ -98,15 +99,16 @@
                         <div class="mb-3">
                             <a href="{{ url_for('frontend.case_detail', id=related_case.id) }}" class="text-decoration-none">
                                 <div class="d-flex">
-                                    {% if related_case.case_photos.count() > 0 %}
-                                    <img src="{{ related_case.case_photos.first().image|storage_url }}" 
+                                    {% set related_first_photo = related_case.get_first_image() %}
+                                    {% if related_first_photo %}
+                                    <img src="{{ related_first_photo.image|storage_url }}" 
                                          alt="{{ related_case.name }}"
                                          class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
                                     {% else %}
-                                    <div class="me-3 bg-light d-flex align-items-center justify-content-center" 
-                                         style="width: 80px; height: 80px; border-radius: 8px;">
-                                        <i class="fas fa-image text-muted"></i>
-                                    </div>
+                                    <img src="{{ url_for('static', filename='images/default-case.jpg') }}" 
+                                         alt="No Image"
+                                         class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+                                         onerror="this.src='{{ url_for('static', filename='images/default-case.jpg') }}';">
                                     {% endif %}
                                     <div>
                                         <h6 class="mb-1">{{ related_case.name }}</h6>

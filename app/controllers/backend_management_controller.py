@@ -6,6 +6,9 @@ from sqlalchemy import desc, asc
 from app import db
 from app.models import ProjectCase, CasePhoto, News, Slider, Contact
 from app.utils.auth import admin_required
+from app.services.image_service import ImageService
+from werkzeug.utils import secure_filename
+import os
 
 
 class BackendManagementController:
@@ -69,6 +72,21 @@ class BackendManagementController:
             
             try:
                 db.session.add(case)
+                db.session.flush()  # Get case.id
+                
+                # Handle photo uploads
+                if 'photos[]' in request.files:
+                    files = request.files.getlist('photos[]')
+                    for index, file in enumerate(files):
+                        if file and file.filename:
+                            image_path = ImageService.process_and_save(file, subfolder='cases', max_width=1920, max_height=1080)
+                            photo = CasePhoto(
+                                project_case_id=case.id,
+                                image=image_path,
+                                sort_order=index
+                            )
+                            db.session.add(photo)
+                
                 db.session.commit()
                 flash('案例創建成功', 'success')
             except Exception as e:
@@ -80,10 +98,105 @@ class BackendManagementController:
     @staticmethod
     @login_required
     @admin_required
+    def upload_case_photo(case_id):
+        """Upload photo for case."""
+        case = ProjectCase.query.get_or_404(case_id)
+        
+        if 'photo' not in request.files:
+            return jsonify({'success': False, 'message': '沒有選擇檔案'}), 400
+        
+        file = request.files['photo']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': '沒有選擇檔案'}), 400
+        
+        try:
+            # Process and save image
+            image_path = ImageService.process_and_save(file, subfolder='cases', max_width=1920, max_height=1080)
+            
+            # Get max sort_order for this case
+            max_sort = db.session.query(db.func.max(CasePhoto.sort_order))\
+                .filter_by(project_case_id=case_id)\
+                .scalar() or -1
+            
+            # Create CasePhoto record
+            photo = CasePhoto(
+                project_case_id=case_id,
+                image=image_path,
+                sort_order=max_sort + 1
+            )
+            
+            db.session.add(photo)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': '圖片上傳成功',
+                'photo': {
+                    'id': photo.id,
+                    'image': photo.image,
+                    'sort_order': photo.sort_order
+                }
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'上傳失敗: {str(e)}'}), 500
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def delete_case_photo(case_id, photo_id):
+        """Delete case photo."""
+        photo = CasePhoto.query.filter_by(id=photo_id, project_case_id=case_id).first_or_404()
+        
+        try:
+            # Delete image file
+            ImageService.delete_image(photo.image)
+            
+            # Delete database record
+            db.session.delete(photo)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': '圖片刪除成功'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'刪除失敗: {str(e)}'}), 500
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_case_photo_order(case_id):
+        """Update photo sort order."""
+        case = ProjectCase.query.get_or_404(case_id)
+        
+        if request.method == 'POST':
+            photo_orders = request.get_json().get('orders', [])
+            
+            try:
+                for item in photo_orders:
+                    photo_id = item.get('id')
+                    sort_order = item.get('sort_order')
+                    
+                    photo = CasePhoto.query.filter_by(id=photo_id, project_case_id=case_id).first()
+                    if photo:
+                        photo.sort_order = sort_order
+                
+                db.session.commit()
+                return jsonify({'success': True, 'message': '排序更新成功'})
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': f'更新失敗: {str(e)}'}), 500
+        
+        return jsonify({'success': False, 'message': '無效的請求'}), 400
+    
+    @staticmethod
+    @login_required
+    @admin_required
     def edit_case(case_id):
         """Edit case page."""
         case = ProjectCase.query.get_or_404(case_id)
-        return render_template('backend/edit_case.html', case=case)
+        # Load photos ordered by sort_order
+        photos = case.case_photos.order_by(CasePhoto.sort_order).all()
+        return render_template('backend/edit_case.html', case=case, photos=photos)
     
     @staticmethod
     @login_required

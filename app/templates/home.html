@@ -114,15 +114,16 @@
                     <!-- Top: Image and title area -->
                     <div class="flex-grow-1">
                         <a href="{{ url_for('frontend.case_detail', id=case.id) }}" class="text-decoration-none">
-                            {% if case.case_photos.count() > 0 %}
-                            <img src="{{ case.case_photos.first().image|storage_url }}"
+                            {% set first_photo = case.get_first_image() %}
+                            {% if first_photo %}
+                            <img src="{{ first_photo.image|storage_url }}"
                                 class="card-img-top" alt="{{ case.name }}"
                                 style="height: 200px; object-fit: cover;">
                             {% else %}
-                            <div class="d-flex align-items-center justify-content-center bg-light"
-                                style="height: 200px;">
-                                <span class="text-muted">Unable to load image</span>
-                            </div>
+                            <img src="{{ url_for('static', filename='images/default-case.jpg') }}"
+                                class="card-img-top" alt="No Image"
+                                style="height: 200px; object-fit: cover;"
+                                onerror="this.src='{{ url_for('static', filename='images/default-case.jpg') }}';">
                             {% endif %}
 
                             <div class="card-body">
