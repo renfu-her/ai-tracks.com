@@ -518,42 +518,58 @@ class BackendManagementController:
     @admin_required
     def create_category():
         """Create new category."""
-        if request.method == 'POST':
-            name = request.form.get('name')
-            slug = request.form.get('slug', '')
-            description = request.form.get('description', '')
-            status = request.form.get('status') == 'on'
-            sort_order = request.form.get('sort_order', 0, type=int)
-            
-            if not name:
-                flash('類別名稱為必填項目', 'danger')
-                return redirect(url_for('backend.categories'))
-            
-            # Generate slug from name if not provided
-            if not slug:
-                slug = name.lower().replace(' ', '-').replace('_', '-')
-            
-            # Check if slug already exists
-            existing = ProductCategory.query.filter_by(slug=slug).first()
-            if existing:
-                flash('該 slug 已存在，請使用其他名稱', 'danger')
-                return redirect(url_for('backend.categories'))
-            
-            category = ProductCategory(
-                name=name,
-                slug=slug,
-                description=description,
-                status=status,
-                sort_order=sort_order
-            )
-            
-            try:
-                db.session.add(category)
-                db.session.commit()
-                flash('類別創建成功', 'success')
-            except Exception as e:
-                db.session.rollback()
-                flash(f'創建類別失敗: {str(e)}', 'danger')
+        name = request.form.get('name')
+        slug = request.form.get('slug', '')
+        description = request.form.get('description', '')
+        status = request.form.get('status') == 'on'
+        sort_order = request.form.get('sort_order', 0, type=int)
+        
+        if not name:
+            flash('類別名稱為必填項目', 'danger')
+            return redirect(url_for('backend.categories'))
+        
+        # Generate slug from name if not provided
+        if not slug:
+            slug = name.lower().replace(' ', '-').replace('_', '-')
+        
+        # Check if slug already exists
+        existing = ProductCategory.query.filter_by(slug=slug).first()
+        if existing:
+            flash('該 slug 已存在，請使用其他名稱', 'danger')
+            return redirect(url_for('backend.categories'))
+        
+        # Handle image upload
+        image_path = None
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file and image_file.filename:
+                try:
+                    image_path = ImageService.process_and_save(
+                        image_file, 
+                        subfolder='categories',
+                        max_width=800,
+                        max_height=400,
+                        quality=90
+                    )
+                except Exception as e:
+                    flash(f'圖片上傳失敗: {str(e)}', 'danger')
+        
+        category = ProductCategory(
+            name=name,
+            slug=slug,
+            description=description,
+            image=image_path,
+            status=status,
+            sort_order=sort_order
+        )
+        
+        try:
+            db.session.add(category)
+            db.session.commit()
+            flash('類別創建成功', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'創建類別失敗: {str(e)}', 'danger')
         
         return redirect(url_for('backend.categories'))
     
@@ -572,42 +588,62 @@ class BackendManagementController:
         """Update category."""
         category = ProductCategory.query.get_or_404(category_id)
         
-        if request.method == 'POST':
-            name = request.form.get('name')
-            slug = request.form.get('slug', '')
-            description = request.form.get('description', '')
-            status = request.form.get('status') == 'on'
-            sort_order = request.form.get('sort_order', 0, type=int)
-            
-            if not name:
-                flash('類別名稱為必填項目', 'danger')
-                return redirect(url_for('backend.edit_category', category_id=category_id))
-            
-            # Generate slug from name if not provided
-            if not slug:
-                slug = name.lower().replace(' ', '-').replace('_', '-')
-            
-            # Check if slug already exists (excluding current category)
-            existing = ProductCategory.query.filter(
-                ProductCategory.slug == slug,
-                ProductCategory.id != category_id
-            ).first()
-            if existing:
-                flash('該 slug 已存在，請使用其他名稱', 'danger')
-                return redirect(url_for('backend.edit_category', category_id=category_id))
-            
-            category.name = name
-            category.slug = slug
-            category.description = description
-            category.status = status
-            category.sort_order = sort_order
-            
-            try:
-                db.session.commit()
-                flash('類別更新成功', 'success')
-            except Exception as e:
-                db.session.rollback()
-                flash(f'更新類別失敗: {str(e)}', 'danger')
+        name = request.form.get('name')
+        slug = request.form.get('slug', '')
+        description = request.form.get('description', '')
+        status = request.form.get('status') == 'on'
+        sort_order = request.form.get('sort_order', 0, type=int)
+        
+        if not name:
+            flash('類別名稱為必填項目', 'danger')
+            return redirect(url_for('backend.edit_category', category_id=category_id))
+        
+        # Generate slug from name if not provided
+        if not slug:
+            slug = name.lower().replace(' ', '-').replace('_', '-')
+        
+        # Check if slug already exists (excluding current category)
+        existing = ProductCategory.query.filter(
+            ProductCategory.slug == slug,
+            ProductCategory.id != category_id
+        ).first()
+        if existing:
+            flash('該 slug 已存在，請使用其他名稱', 'danger')
+            return redirect(url_for('backend.edit_category', category_id=category_id))
+        
+        # Handle image upload
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file and image_file.filename:
+                # Delete old image if exists
+                if category.image:
+                    ImageService.delete_image(category.image)
+                
+                # Process and save new image
+                try:
+                    image_path = ImageService.process_and_save(
+                        image_file, 
+                        subfolder='categories',
+                        max_width=800,
+                        max_height=400,
+                        quality=90
+                    )
+                    category.image = image_path
+                except Exception as e:
+                    flash(f'圖片上傳失敗: {str(e)}', 'danger')
+        
+        category.name = name
+        category.slug = slug
+        category.description = description
+        category.status = status
+        category.sort_order = sort_order
+        
+        try:
+            db.session.commit()
+            flash('類別更新成功', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'更新類別失敗: {str(e)}', 'danger')
         
         return redirect(url_for('backend.categories'))
     

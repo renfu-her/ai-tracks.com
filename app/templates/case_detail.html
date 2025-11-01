@@ -12,7 +12,13 @@
             <div class="col-12">
                 <h1 class="display-5 fw-bold mb-3">{{ case.name }}</h1>
                 {% if case.category %}
-                <div class="mb-2">
+                <div class="mb-3">
+                    {% if case.category.image %}
+                    <img src="{{ case.category.image|storage_url }}" 
+                         alt="{{ case.category.name }}"
+                         class="mb-2 rounded"
+                         style="max-height: 150px; width: auto;">
+                    {% endif %}
                     <span class="badge bg-light text-dark fs-6">{{ case.category.name }}</span>
                 </div>
                 {% endif %}

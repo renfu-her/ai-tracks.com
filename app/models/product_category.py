@@ -12,6 +12,7 @@ class ProductCategory(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True, comment='類別名稱')
     slug = db.Column(db.String(100), nullable=False, unique=True, comment='URL 友好名稱')
     description = db.Column(db.Text, nullable=True, comment='描述')
+    image = db.Column(db.String(255), nullable=True, comment='類別圖片')
     status = db.Column(db.Boolean, default=True, nullable=False, comment='狀態')
     sort_order = db.Column(db.Integer, default=0, nullable=False, comment='排序')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -30,6 +31,7 @@ class ProductCategory(db.Model):
             'name': self.name,
             'slug': self.slug,
             'description': self.description,
+            'image': self.image,
             'status': self.status,
             'sort_order': self.sort_order,
             'created_at': self.created_at.isoformat() if self.created_at else None,

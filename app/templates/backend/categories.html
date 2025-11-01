@@ -124,7 +124,7 @@
                 <h5 class="modal-title">新增類別</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('backend.create_category') }}">
+            <form method="POST" action="{{ url_for('backend.create_category') }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -142,6 +142,12 @@
                     <div class="mb-3">
                         <label for="description" class="form-label">描述</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">類別圖片</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="form-text text-muted">支援 JPG、PNG、GIF 格式，圖片會自動轉換為 WebP 格式</small>
                     </div>
                     
                     <div class="mb-3">

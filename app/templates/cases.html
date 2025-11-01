@@ -53,6 +53,12 @@
                                  class="card-img-top" alt="{{ case.name }}"
                                  style="height: 250px; object-fit: cover;">
                         </div>
+                        {% elif case.category and case.category.image %}
+                        <div class="position-relative">
+                            <img src="{{ case.category.image|storage_url }}"
+                                 class="card-img-top" alt="{{ case.category.name }}"
+                                 style="height: 250px; object-fit: cover;">
+                        </div>
                         {% else %}
                         <div class="position-relative">
                             <img src="{{ url_for('static', filename='images/default-case.jpg') }}"
