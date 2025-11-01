@@ -8,8 +8,9 @@
 
 {% block content %}
 <!-- Page Header -->
-<section class="bg-primary text-white py-5">
-    <div class="container">
+<section class="text-white py-5 position-relative" {% if category and category.image %}style="background-image: url('{{ category.image|storage_url }}'); background-size: cover; background-position: center;"{% elif page_banner %}style="background-image: url('{{ page_banner|storage_url }}'); background-size: cover; background-position: center;"{% else %}style="background-color: #007bff;"{% endif %}>
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0, 0, 0, 0.5);"></div>
+    <div class="container position-relative">
         <div class="row">
             <div class="col-12 text-center">
                 <h1 class="display-5 fw-bold mb-3">Case Studies{% if category %} - {{ category.name }}{% endif %}</h1>

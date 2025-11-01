@@ -6,6 +6,7 @@ from app.models.news import News
 from app.models.slider import Slider
 from app.models.contact import Contact
 from app.models.user import User
+from app.models.page_settings import PageSettings
 
 __all__ = [
     'ProjectCase',
@@ -14,6 +15,7 @@ __all__ = [
     'News',
     'Slider',
     'Contact',
-    'User'
+    'User',
+    'PageSettings'
 ]
 

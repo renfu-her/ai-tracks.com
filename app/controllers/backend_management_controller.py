@@ -4,11 +4,12 @@ from flask_login import login_required
 from datetime import datetime
 from sqlalchemy import desc, asc
 from app import db
-from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory
+from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.utils.auth import admin_required
 from app.services.image_service import ImageService
 from werkzeug.utils import secure_filename
 import os
+from math import ceil
 
 
 class BackendManagementController:
@@ -329,9 +330,20 @@ class BackendManagementController:
             except:
                 published_date = datetime.utcnow().date()
             
+            # Handle image upload
+            image_path = None
+            if 'image' in request.files:
+                file = request.files['image']
+                if file and file.filename != '':
+                    try:
+                        image_path = ImageService.process_news_image(file)
+                    except Exception as e:
+                        flash(f'圖片處理失敗: {str(e)}', 'warning')
+            
             news = News(
                 title=title,
                 content=content,
+                image=image_path,
                 published_at=published_date,
                 is_active=is_active
             )
@@ -376,6 +388,21 @@ class BackendManagementController:
             except:
                 published_date = news.published_at
             
+            # Handle image upload
+            if 'image' in request.files:
+                file = request.files['image']
+                if file and file.filename != '':
+                    try:
+                        # Delete old image if exists
+                        if news.image:
+                            ImageService.delete_image(news.image)
+                        
+                        # Process and save new image
+                        image_path = ImageService.process_news_image(file)
+                        news.image = image_path
+                    except Exception as e:
+                        flash(f'圖片處理失敗: {str(e)}', 'warning')
+            
             news.title = title
             news.content = content
             news.published_at = published_date
@@ -398,6 +425,10 @@ class BackendManagementController:
         news = News.query.get_or_404(news_id)
         
         try:
+            # Delete image if exists
+            if news.image:
+                ImageService.delete_image(news.image)
+            
             db.session.delete(news)
             db.session.commit()
             flash('消息刪除成功', 'success')
@@ -669,4 +700,297 @@ class BackendManagementController:
             flash(f'刪除類別失敗: {str(e)}', 'danger')
         
         return redirect(url_for('backend.categories'))
+    
+    # ========== Media Management ==========
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def media():
+        """Media management page - unified image management for page banners."""
+        content_type = request.args.get('type', 'all')  # all, news, contacts, categories
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        
+        images_data = []
+        
+        # Get News page banner
+        if content_type in ['all', 'news']:
+            news_page = PageSettings.get_or_create('news_list')
+            if news_page.banner_image:
+                images_data.append({
+                    'id': news_page.id,
+                    'type': 'news_list',
+                    'type_name': '消息列表頁面',
+                    'title': '消息列表頁面 Banner',
+                    'image': news_page.banner_image,
+                    'created_at': news_page.created_at,
+                    'url': None
+                })
+        
+        # Get Contact page banner
+        if content_type in ['all', 'contacts']:
+            contact_page = PageSettings.get_or_create('contact_list')
+            if contact_page.banner_image:
+                images_data.append({
+                    'id': contact_page.id,
+                    'type': 'contact_list',
+                    'type_name': '聯絡訊息列表頁面',
+                    'title': '聯絡訊息列表頁面 Banner',
+                    'image': contact_page.banner_image,
+                    'created_at': contact_page.created_at,
+                    'url': None
+                })
+        
+        # Get Category page banner
+        if content_type in ['all', 'categories']:
+            category_page = PageSettings.get_or_create('category_list')
+            if category_page.banner_image:
+                images_data.append({
+                    'id': category_page.id,
+                    'type': 'category_list',
+                    'type_name': '類別列表頁面',
+                    'title': '類別列表頁面 Banner',
+                    'image': category_page.banner_image,
+                    'created_at': category_page.created_at,
+                    'url': None
+                })
+        
+        # Sort by created_at descending
+        images_data.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        # Pagination
+        total = len(images_data)
+        total_pages = ceil(total / per_page) if total > 0 else 1
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_images = images_data[start_idx:end_idx]
+        
+        # Create pagination object-like structure
+        class Pagination:
+            def __init__(self, items, page, per_page, total):
+                self.items = items
+                self.page = page
+                self.per_page = per_page
+                self.total = total
+                self.pages = total_pages
+                self.has_prev = page > 1
+                self.has_next = page < total_pages
+                self.prev_num = page - 1 if self.has_prev else None
+                self.next_num = page + 1 if self.has_next else None
+                
+                def iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2):
+                    last = total_pages
+                    for num in range(1, last + 1):
+                        if num <= left_edge or \
+                           (num > self.page - left_current - 1 and num < self.page + right_current) or \
+                           num > last - right_edge:
+                            yield num
+                
+                self.iter_pages = iter_pages
+        
+        pagination = Pagination(paginated_images, page, per_page, total)
+        
+        # If requesting JSON format for items without images
+        if request.args.get('format') == 'json' and request.args.get('without_images') == 'true':
+            # This endpoint is no longer needed since we don't need to select items
+            return jsonify({'message': 'Not needed'})
+        
+        return render_template(
+            'backend/media.html',
+            media=pagination,
+            current_type=content_type,
+            current_page=page
+        )
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_media_image():
+        """Update image for news, contact, or category page banners."""
+        if request.method == 'POST':
+            content_type = request.form.get('content_type')  # news_list, contact_list, category_list
+            content_id = request.form.get('content_id', type=int)
+            
+            if 'image' not in request.files:
+                flash('請選擇圖片', 'danger')
+                return redirect(url_for('backend.media'))
+            
+            file = request.files['image']
+            if file.filename == '':
+                flash('請選擇圖片', 'danger')
+                return redirect(url_for('backend.media'))
+            
+            try:
+                if content_type == 'news_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    # Delete old image
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('消息列表頁面圖片更新成功', 'success')
+                
+                elif content_type == 'contact_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    # Delete old image
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('聯絡訊息列表頁面圖片更新成功', 'success')
+                
+                elif content_type == 'category_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    # Delete old image
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('類別列表頁面圖片更新成功', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'圖片更新失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.media'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def delete_media_image():
+        """Delete image for news, contact, or category page banners."""
+        if request.method == 'POST':
+            content_type = request.form.get('content_type')
+            content_id = request.form.get('content_id', type=int)
+            
+            try:
+                if content_type == 'news_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                        page_settings.banner_image = None
+                        db.session.commit()
+                        flash('消息列表頁面圖片刪除成功', 'success')
+                
+                elif content_type == 'contact_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                        page_settings.banner_image = None
+                        db.session.commit()
+                        flash('聯絡訊息列表頁面圖片刪除成功', 'success')
+                
+                elif content_type == 'category_list':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                        page_settings.banner_image = None
+                        db.session.commit()
+                        flash('類別列表頁面圖片刪除成功', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'圖片刪除失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.media'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def add_media_image():
+        """Add new image for news, contact, or category page banners."""
+        if request.method == 'POST':
+            content_type = request.form.get('content_type')  # news_list, contact_list, category_list
+            
+            if 'image' not in request.files:
+                flash('請選擇圖片', 'danger')
+                return redirect(url_for('backend.media'))
+            
+            file = request.files['image']
+            if file.filename == '':
+                flash('請選擇圖片', 'danger')
+                return redirect(url_for('backend.media'))
+            
+            try:
+                if content_type == 'news_list':
+                    page_settings = PageSettings.get_or_create('news_list')
+                    if page_settings.banner_image:
+                        flash('該頁面已有圖片，請使用更新功能', 'warning')
+                        return redirect(url_for('backend.media'))
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('消息列表頁面圖片新增成功', 'success')
+                
+                elif content_type == 'contact_list':
+                    page_settings = PageSettings.get_or_create('contact_list')
+                    if page_settings.banner_image:
+                        flash('該頁面已有圖片，請使用更新功能', 'warning')
+                        return redirect(url_for('backend.media'))
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('聯絡訊息列表頁面圖片新增成功', 'success')
+                
+                elif content_type == 'category_list':
+                    page_settings = PageSettings.get_or_create('category_list')
+                    if page_settings.banner_image:
+                        flash('該頁面已有圖片，請使用更新功能', 'warning')
+                        return redirect(url_for('backend.media'))
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('類別列表頁面圖片新增成功', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'圖片新增失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.media'))
 

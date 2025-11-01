@@ -2,7 +2,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from sqlalchemy import desc, asc
 from app import db
-from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory
+from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.forms.contact_form import ContactForm
 
 
@@ -73,12 +73,19 @@ class FrontendController:
             error_out=False
         )
         
+        # Get page banner image for category list (when no specific category is selected)
+        page_banner = None
+        if not category:
+            category_list_settings = PageSettings.get_or_create('category_list')
+            page_banner = category_list_settings.banner_image
+        
         return render_template(
             'cases.html',
             cases=cases_pagination,
             current_sort=sort,
             current_category=category_slug,
-            category=category
+            category=category,
+            page_banner=page_banner
         )
     
     @staticmethod
@@ -128,7 +135,10 @@ class FrontendController:
                 error_out=False
             )
         
-        return render_template('news.html', news=news_pagination)
+        # Get page banner image
+        news_page_settings = PageSettings.get_or_create('news_list')
+        
+        return render_template('news.html', news=news_pagination, page_banner=news_page_settings.banner_image)
     
     @staticmethod
     def news_detail(id):
@@ -153,7 +163,11 @@ class FrontendController:
     def contact():
         """Contact page (GET) - display form."""
         form = ContactForm()
-        return render_template('contact.html', form=form)
+        
+        # Get page banner image
+        contact_page_settings = PageSettings.get_or_create('contact_list')
+        
+        return render_template('contact.html', form=form, page_banner=contact_page_settings.banner_image)
     
     @staticmethod
     def store_contact():
@@ -184,7 +198,10 @@ class FrontendController:
                 for error in errors:
                     flash(error, 'danger')
         
-        return render_template('contact.html', form=form)
+        # Get page banner image
+        contact_page_settings = PageSettings.get_or_create('contact_list')
+        
+        return render_template('contact.html', form=form, page_banner=contact_page_settings.banner_image)
     
     @staticmethod
     def get_case_api(id):

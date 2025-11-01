@@ -14,11 +14,28 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="{{ url_for('backend.edit_news', news_id=news.id) }}">
+        <form method="POST" action="{{ url_for('backend.edit_news', news_id=news.id) }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="mb-3">
                 <label for="title" class="form-label">標題 <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="title" name="title" value="{{ news.title }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="image" class="form-label">圖片</label>
+                {% if news.image %}
+                <div class="mb-2">
+                    <img src="{{ news.image|storage_url }}" 
+                         alt="{{ news.title }}" 
+                         class="img-thumbnail" 
+                         style="max-width: 200px; height: auto;">
+                    <br><small class="text-muted">目前圖片</small>
+                </div>
+                {% endif %}
+                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> 支援 JPG、PNG 等格式，將自動轉換為 WebP。留空則不更新圖片。
+                </small>
             </div>
             
             <div class="mb-3">
@@ -53,6 +70,13 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
+    // Initialize Flatpickr for date input
+    flatpickr("#published_at", {
+        dateFormat: "Y-m-d",
+        allowInput: true,
+        locale: flatpickr.l10ns.zh
+    });
+    
     // Initialize SimpleMDE Markdown Editor
     let newsEditor = null;
     

@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SimpleMDE Markdown Editor CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     
@@ -200,6 +202,12 @@
                                 <i class="fas fa-envelope me-2"></i>聯絡訊息
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'backend.media' %}active{% endif %}" 
+                               href="{{ url_for('backend.media') }}">
+                                <i class="fas fa-images me-2"></i>媒體管理
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -233,6 +241,10 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- SimpleMDE Markdown Editor JS -->
     <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Flatpickr Chinese Locale -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
     
     {% block scripts %}{% endblock %}
     

@@ -18,6 +18,7 @@ class Contact(db.Model):
                        default='pending', nullable=False, comment='處理狀態')
     reply = db.Column(db.Text, nullable=True, comment='回覆內容')
     replied_at = db.Column(db.DateTime, nullable=True, comment='回覆時間')
+    image = db.Column(db.String(255), nullable=True, comment='圖片')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -36,6 +37,7 @@ class Contact(db.Model):
             'status': self.status,
             'reply': self.reply,
             'replied_at': self.replied_at.isoformat() if self.replied_at else None,
+            'image': self.image,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

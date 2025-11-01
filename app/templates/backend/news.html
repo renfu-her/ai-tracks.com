@@ -20,6 +20,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>圖片</th>
                         <th>標題</th>
                         <th>發布日期</th>
                         <th>狀態</th>
@@ -32,10 +33,17 @@
                     <tr>
                         <td>{{ news_item.id }}</td>
                         <td>
-                            <strong>{{ news_item.title }}</strong>
                             {% if news_item.image %}
-                            <br><small class="text-muted"><i class="fas fa-image"></i> 有圖片</small>
+                            <img src="{{ news_item.image|storage_url }}" 
+                                 alt="{{ news_item.title }}" 
+                                 class="img-thumbnail" 
+                                 style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                            <span class="text-muted">無圖片</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ news_item.title }}</strong>
                         </td>
                         <td>{{ news_item.published_at|format_date }}</td>
                         <td>
@@ -64,7 +72,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted">尚無消息</td>
+                        <td colspan="7" class="text-center text-muted">尚無消息</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -124,12 +132,20 @@
                 <h5 class="modal-title">新增消息</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('backend.create_news') }}">
+            <form method="POST" action="{{ url_for('backend.create_news') }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="title" class="form-label">標題 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">圖片</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> 支援 JPG、PNG 等格式，將自動轉換為 WebP
+                        </small>
                     </div>
                     
                     <div class="mb-3">
@@ -165,11 +181,22 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
-    // Initialize SimpleMDE Markdown Editor
+    // Initialize Flatpickr for date input in modal
+    let datePicker = null;
     let newsEditor = null;
     
-    // Initialize editor when modal is shown
+    // Initialize editor and date picker when modal is shown
     $('#createNewsModal').on('shown.bs.modal', function() {
+        // Initialize Flatpickr when modal is shown
+        if (!datePicker) {
+            datePicker = flatpickr("#published_at", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                locale: flatpickr.l10ns.zh
+            });
+        }
+        
+        // Initialize SimpleMDE Markdown Editor
         if (!newsEditor) {
             // Remove required attribute to avoid validation error when textarea is hidden
             const contentTextarea = document.getElementById('content');
@@ -200,11 +227,16 @@ $(document).ready(function() {
         }
     });
     
-    // Destroy editor when modal is hidden
+    // Destroy editor and date picker when modal is hidden
     $('#createNewsModal').on('hidden.bs.modal', function() {
         if (newsEditor) {
             newsEditor.toTextArea();
             newsEditor = null;
+        }
+        // Destroy Flatpickr when modal is hidden
+        if (datePicker) {
+            datePicker.destroy();
+            datePicker = null;
         }
         // Restore required attribute
         const contentTextarea = document.getElementById('content');

@@ -155,4 +155,24 @@ class ImageService:
             max_height=1080, 
             quality=quality
         )
+    
+    @staticmethod
+    def process_contact_image(file, quality=80):
+        """
+        Process contact image with specific dimensions.
+        
+        Args:
+            file: FileStorage object from request.files
+            quality: WebP quality (0-100)
+            
+        Returns:
+            Relative path to saved file
+        """
+        return ImageService.process_and_save(
+            file, 
+            subfolder='contacts', 
+            max_width=1920, 
+            max_height=1080, 
+            quality=quality
+        )
 

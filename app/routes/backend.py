@@ -244,3 +244,36 @@ def delete_category(category_id):
     """Delete category."""
     return BackendManagementController.delete_category(category_id)
 
+
+# Media management (requires admin)
+@backend_bp.route('/media')
+@login_required
+@admin_required
+def media():
+    """Media management."""
+    return BackendManagementController.media()
+
+
+@backend_bp.route('/media/update-image', methods=['POST'])
+@login_required
+@admin_required
+def update_media_image():
+    """Update media image."""
+    return BackendManagementController.update_media_image()
+
+
+@backend_bp.route('/media/delete-image', methods=['POST'])
+@login_required
+@admin_required
+def delete_media_image():
+    """Delete media image."""
+    return BackendManagementController.delete_media_image()
+
+
+@backend_bp.route('/media/add-image', methods=['POST'])
+@login_required
+@admin_required
+def add_media_image():
+    """Add media image."""
+    return BackendManagementController.add_media_image()
+
