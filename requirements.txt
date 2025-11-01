@@ -14,6 +14,7 @@ WTForms==3.1.1
 email-validator==2.1.0
 
 # Image Processing
+# Pillow 10.1.0 works well with Python 3.12
 Pillow==10.1.0
 
 # Markdown Support
@@ -23,12 +24,13 @@ Markdown==3.5.1
 python-dotenv==1.0.0
 
 # WSGI Server
+# uWSGI 2.0.23 works well with Python 3.12
+# Note: uWSGI is primarily for Linux/Unix. For Windows development, use Flask's built-in server.
 uWSGI==2.0.23
 
 # Utilities
 python-dateutil==2.8.2
 
-# Database Drivers (optional, uncomment if needed)
-# psycopg2-binary==2.9.9  # PostgreSQL
-# PyMySQL==1.1.0          # MySQL
-
+# Database Drivers
+PyMySQL==1.1.0          # MySQL (required for MySQL database)
+# psycopg2-binary==2.9.9  # PostgreSQL (optional, uncomment if needed)

@@ -18,22 +18,29 @@ python run.py
 ### For Production with uWSGI
 
 ```bash
-# 1. Install dependencies
+# 1. Ensure Python 3.12 is installed
+python3.12 --version
+
+# 2. Create virtual environment with Python 3.12
+python3.12 -m venv venv
+source venv/bin/activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 2. Configure environment
+# 4. Configure environment
 cp .env.example .env
 # Edit .env and set production values
 
-# 3. Initialize database
+# 5. Initialize database
 flask db init
 flask db migrate -m "Initial migration"
 flask db upgrade
 
-# 4. Update uwsgi.ini paths
+# 6. Update uwsgi.ini paths
 nano uwsgi.ini
 
-# 5. Run uWSGI
+# 7. Run uWSGI
 uwsgi --ini uwsgi.ini
 ```
 
@@ -41,14 +48,21 @@ uwsgi --ini uwsgi.ini
 
 ### Option 1: uWSGI + Nginx
 
-#### Step 1: Install uWSGI and Nginx
+#### Step 1: Install Python 3.12 and uWSGI
 
 ```bash
+# Install Python 3.12 (Ubuntu/Debian)
+sudo apt update
+sudo apt install python3.12 python3.12-venv python3.12-dev
+
+# Create virtual environment with Python 3.12
+python3.12 -m venv venv
+source venv/bin/activate
+
 # Install uWSGI
 pip install uwsgi
 
 # Install Nginx (Ubuntu/Debian)
-sudo apt update
 sudo apt install nginx
 ```
 
@@ -289,6 +303,8 @@ DATABASE_URL=postgresql://username:password@localhost/ai_tracks
 
 Install PostgreSQL adapter:
 ```bash
+# Ensure Python 3.12 is active
+source venv/bin/activate
 pip install psycopg2-binary
 ```
 
@@ -300,6 +316,8 @@ DATABASE_URL=mysql+pymysql://username:password@localhost/ai_tracks
 
 Install MySQL adapter:
 ```bash
+# Ensure Python 3.12 is active
+source venv/bin/activate
 pip install PyMySQL
 ```
 

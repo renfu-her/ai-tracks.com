@@ -7,10 +7,22 @@ echo "AI Tracks - Flask Setup Script"
 echo "======================================"
 echo ""
 
+# Check Python version
+echo "Checking Python version..."
+PYTHON_VERSION=$(python3.12 --version 2>/dev/null || python3 --version 2>/dev/null || python --version 2>/dev/null)
+echo "Found: $PYTHON_VERSION"
+
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+    echo "Creating virtual environment with Python 3.12..."
+    # Try python3.12 first, fallback to python3 or python
+    if command -v python3.12 &> /dev/null; then
+        python3.12 -m venv venv
+    elif command -v python3 &> /dev/null; then
+        python3 -m venv venv
+    else
+        python -m venv venv
+    fi
     echo "✓ Virtual environment created"
 else
     echo "✓ Virtual environment already exists"
@@ -36,7 +48,7 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
     
     # Generate a random secret key
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+    SECRET_KEY=$(python3.12 -c "import secrets; print(secrets.token_hex(32))" 2>/dev/null || python3 -c "import secrets; print(secrets.token_hex(32))" 2>/dev/null || python -c "import secrets; print(secrets.token_hex(32))")
     
     # Update secret key in .env
     sed -i "s/your-secret-key-here-change-in-production/$SECRET_KEY/" .env

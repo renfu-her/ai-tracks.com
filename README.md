@@ -2,6 +2,16 @@
 
 A professional AI technology portfolio website built with Flask, converted from Laravel.
 
+## Python Version
+
+**This project requires Python 3.12.x**
+
+- ✅ Fully tested and supported with Python 3.12
+- ✅ All dependencies are compatible with Python 3.12
+- ✅ uWSGI 2.0.23 requires Python 3.12
+
+See [PYTHON312_REQUIREMENTS.md](PYTHON312_REQUIREMENTS.md) for detailed installation instructions.
+
 ## Features
 
 - **Case Studies Management**: Showcase your projects with image galleries
@@ -14,10 +24,10 @@ A professional AI technology portfolio website built with Flask, converted from 
 
 ## Requirements
 
-- Python 3.8+
+- **Python 3.12** (Recommended - fully tested and supported)
 - pip
 - Virtual environment (recommended)
-- uWSGI (for production)
+- uWSGI (for production, Linux/Unix)
 - SQLite/PostgreSQL/MySQL
 
 ## Installation
@@ -31,6 +41,10 @@ cd /path/to/ai-tracks.com
 ### 2. Create Virtual Environment
 
 ```bash
+# Using Python 3.12 specifically
+python3.12 -m venv venv
+
+# Or if python3.12 is your default python
 python -m venv venv
 
 # On Windows
@@ -264,7 +278,7 @@ flask db upgrade
 # Rollback migration
 flask db downgrade
 
-# Run with uWSGI (development)
+# Run with uWSGI (production - requires Python 3.12)
 uwsgi --ini uwsgi.ini
 
 # Install new package

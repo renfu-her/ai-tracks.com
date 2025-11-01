@@ -14,12 +14,26 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # Database
+    # Support for MySQL, PostgreSQL, and SQLite
+    # MySQL format: mysql+pymysql://username:password@host:port/database
+    # SQLite format: sqlite:///database.db
+    # PostgreSQL format: postgresql://username:password@host:port/database
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'sqlite:///ai_tracks.db'
+        'mysql+pymysql://root:@localhost:3306/ai-tracks'  # Default MySQL config
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
+    
+    # MySQL specific settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'connect_args': {
+            'charset': 'utf8mb4'
+        }
+    }
     
     # File Upload
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')

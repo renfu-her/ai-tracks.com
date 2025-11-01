@@ -29,6 +29,17 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     csrf.init_app(app)
     
+    # Configure database engine options for MySQL
+    if 'mysql' in app.config['SQLALCHEMY_DATABASE_URI']:
+        app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {
+            'pool_size': 10,
+            'pool_recycle': 3600,
+            'pool_pre_ping': True,
+            'connect_args': {
+                'charset': 'utf8mb4'
+            }
+        })
+    
     # Register blueprints
     from app.routes.frontend import frontend_bp
     app.register_blueprint(frontend_bp)

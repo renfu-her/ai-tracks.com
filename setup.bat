@@ -6,9 +6,15 @@ echo AI Tracks - Flask Setup Script
 echo ======================================
 echo.
 
+REM Check Python version
+echo Checking Python version...
+python --version
+echo.
+
 REM Check if virtual environment exists
 if not exist "venv" (
     echo Creating virtual environment...
+    echo Note: This project requires Python 3.12
     python -m venv venv
     echo Virtual environment created
 ) else (
