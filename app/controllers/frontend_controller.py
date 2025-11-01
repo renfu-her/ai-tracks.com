@@ -2,7 +2,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from sqlalchemy import desc, asc
 from app import db
-from app.models import ProjectCase, CasePhoto, News, Slider, Contact
+from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory
 from app.forms.contact_form import ContactForm
 
 
@@ -44,11 +44,19 @@ class FrontendController:
         """Cases listing page with pagination and sorting."""
         # Get sort parameter
         sort = request.args.get('sort', 'latest')
+        category_slug = request.args.get('category')
         page = request.args.get('page', 1, type=int)
         per_page = 9
         
         # Base query: active cases only
         query = ProjectCase.query.filter_by(status=True)
+        
+        # Filter by category if provided
+        category = None
+        if category_slug:
+            category = ProductCategory.query.filter_by(slug=category_slug, status=True).first()
+            if category:
+                query = query.filter(ProjectCase.category_id == category.id)
         
         # Apply sorting
         if sort == 'oldest':
@@ -68,8 +76,16 @@ class FrontendController:
         return render_template(
             'cases.html',
             cases=cases_pagination,
-            current_sort=sort
+            current_sort=sort,
+            current_category=category_slug,
+            category=category
         )
+    
+    @staticmethod
+    def cases_by_category(category_slug):
+        """Cases listing page filtered by category."""
+        # Redirect to cases with category filter
+        return redirect(url_for('frontend.cases', category=category_slug))
     
     @staticmethod
     def case_detail(id):
@@ -77,11 +93,17 @@ class FrontendController:
         # Get case with photos
         case = ProjectCase.query.filter_by(id=id, status=True).first_or_404()
         
-        # Get related cases (exclude current, get 3)
-        related_cases = ProjectCase.query\
-            .filter(ProjectCase.id != id, ProjectCase.status == True)\
+        # Get related cases - same category, exclude current, get 5
+        query = ProjectCase.query\
+            .filter(ProjectCase.id != id, ProjectCase.status == True)
+        
+        if case.category_id:
+            # If case has category, get cases from same category
+            query = query.filter(ProjectCase.category_id == case.category_id)
+        
+        related_cases = query\
             .order_by(desc(ProjectCase.created_at))\
-            .limit(3)\
+            .limit(5)\
             .all()
         
         return render_template(

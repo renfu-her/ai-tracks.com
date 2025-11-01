@@ -1,0 +1,83 @@
+{% extends "backend/base.html" %}
+
+{% block title %}編輯類別 - 後台管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-edit me-2"></i>編輯類別</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('backend.categories') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('backend.update_category', category_id=category.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="name" class="form-label">名稱 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ category.name }}" required>
+                <small class="form-text text-muted">類別顯示名稱</small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="slug" class="form-label">Slug</label>
+                <input type="text" class="form-control" id="slug" name="slug" value="{{ category.slug }}">
+                <small class="form-text text-muted">URL 友好名稱</small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">描述</label>
+                <textarea class="form-control" id="description" name="description" rows="3">{{ category.description or '' }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="sort_order" class="form-label">排序</label>
+                <input type="number" class="form-control" id="sort_order" name="sort_order" value="{{ category.sort_order }}" min="0">
+                <small class="form-text text-muted">數字越小越靠前</small>
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="status" name="status" {% if category.status %}checked{% endif %}>
+                <label class="form-check-label" for="status">
+                    啟用
+                </label>
+            </div>
+            
+            {% if category.project_cases.count() > 0 %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>此類別下有 <strong>{{ category.project_cases.count() }}</strong> 個案例
+            </div>
+            {% endif %}
+            
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('backend.categories') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">更新</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Auto-generate slug from name if slug is empty
+    $('#name').on('input', function() {
+        const name = $(this).val();
+        const slugInput = $('#slug');
+        if (!slugInput.val()) {
+            const slug = name.toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+            slugInput.val(slug);
+        }
+    });
+});
+</script>
+{% endblock %}
+

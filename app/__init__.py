@@ -33,6 +33,11 @@ def create_app(config_name=None):
     from app.config import config
     app.config.from_object(config[config_name])
     
+    # Enable template auto-reload in development
+    if app.config.get('DEBUG'):
+        app.config['TEMPLATES_AUTO_RELOAD'] = True
+        app.jinja_env.auto_reload = True
+    
     # Initialize extensions with app
     db.init_app(app)
     migrate.init_app(app, db)
@@ -62,6 +67,7 @@ def create_app(config_name=None):
     
     # Register template filters and context processors
     from app.utils.helpers import storage_url, format_date, markdown_to_html
+    from sqlalchemy import asc
     app.jinja_env.filters['storage_url'] = storage_url
     app.jinja_env.filters['format_date'] = format_date
     app.jinja_env.filters['markdown'] = markdown_to_html
@@ -71,6 +77,17 @@ def create_app(config_name=None):
     @app.context_processor
     def inject_csrf_token():
         return dict(csrf_token=generate_csrf)
+    
+    # Make categories available in templates
+    @app.context_processor
+    def inject_categories():
+        from app.models.product_category import ProductCategory
+        categories = ProductCategory.query\
+            .filter_by(status=True)\
+            .order_by(asc(ProductCategory.sort_order))\
+            .limit(4)\
+            .all()
+        return dict(categories=categories)
     
     # Create upload directories if they don't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

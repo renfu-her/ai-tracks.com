@@ -209,3 +209,38 @@ def delete_contact(contact_id):
     """Delete contact."""
     return BackendManagementController.delete_contact(contact_id)
 
+
+# Categories management (requires admin)
+@backend_bp.route('/categories')
+@login_required
+@admin_required
+def categories():
+    """Categories management."""
+    return BackendManagementController.categories()
+
+
+@backend_bp.route('/categories/create', methods=['POST'])
+@login_required
+@admin_required
+def create_category():
+    """Create category."""
+    return BackendManagementController.create_category()
+
+
+@backend_bp.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_category(category_id):
+    """Edit category."""
+    if request.method == 'POST':
+        return BackendManagementController.update_category(category_id)
+    return BackendManagementController.edit_category(category_id)
+
+
+@backend_bp.route('/categories/<int:category_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_category(category_id):
+    """Delete category."""
+    return BackendManagementController.delete_category(category_id)
+

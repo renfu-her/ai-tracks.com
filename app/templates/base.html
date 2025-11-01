@@ -64,8 +64,19 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('frontend.home') }}">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('frontend.cases') }}">Case Studies</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="caseStudiesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Case Studies
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="caseStudiesDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('frontend.cases') }}">All Cases</a></li>
+                                {% if categories|length > 0 %}
+                                <li><hr class="dropdown-divider"></li>
+                                {% for category in categories %}
+                                <li><a class="dropdown-item" href="{{ url_for('frontend.cases_by_category', category_slug=category.slug) }}">{{ category.name }}</a></li>
+                                {% endfor %}
+                                {% endif %}
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('frontend.news') }}">News</a>

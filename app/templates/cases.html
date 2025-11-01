@@ -12,7 +12,7 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h1 class="display-5 fw-bold mb-3">Case Studies</h1>
+                <h1 class="display-5 fw-bold mb-3">Case Studies{% if category %} - {{ category.name }}{% endif %}</h1>
                 <p class="lead">Explore our successful cases and see how AI technology is changing the world</p>
             </div>
         </div>
@@ -44,45 +44,63 @@
         <div class="row" id="casesGrid">
             {% for case in cases.items %}
             <div class="col-lg-4 col-md-6 mb-4 case-item">
-                <div class="card h-100 shadow-sm border-0 hover-lift">
-                    {% set first_photo = case.get_first_image() %}
-                    {% if first_photo %}
-                    <div class="position-relative">
-                        <img src="{{ first_photo.image|storage_url }}"
-                             class="card-img-top" alt="{{ case.name }}"
-                             style="height: 250px; object-fit: cover;">
-                    </div>
-                    {% else %}
-                    <div class="position-relative">
-                        <img src="{{ url_for('static', filename='images/default-case.jpg') }}"
-                             class="card-img-top" alt="No Image"
-                             style="height: 250px; object-fit: cover;"
-                             onerror="this.src='{{ url_for('static', filename='images/default-case.jpg') }}';">
-                    </div>
-                    {% endif %}
-
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title fw-bold mb-2">{{ case.name }}</h5>
-                        {% if case.sub_name %}
-                        <h6 class="card-subtitle text-muted mb-3">{{ case.sub_name }}</h6>
+                <a href="{{ url_for('frontend.case_detail', id=case.id) }}" class="text-decoration-none card-link">
+                    <div class="card h-100 shadow-sm border-0 hover-lift">
+                        {% set first_photo = case.get_first_image() %}
+                        {% if first_photo %}
+                        <div class="position-relative">
+                            <img src="{{ first_photo.image|storage_url }}"
+                                 class="card-img-top" alt="{{ case.name }}"
+                                 style="height: 250px; object-fit: cover;">
+                        </div>
+                        {% else %}
+                        <div class="position-relative">
+                            <img src="{{ url_for('static', filename='images/default-case.jpg') }}"
+                                 class="card-img-top" alt="No Image"
+                                 style="height: 250px; object-fit: cover;"
+                                 onerror="this.src='{{ url_for('static', filename='images/default-case.jpg') }}';">
+                        </div>
                         {% endif %}
 
-                        <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center">
-                                {% if case.url %}
-                                <a href="{{ case.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
-                                    <i class="fas fa-external-link-alt me-1"></i>View Website
-                                </a>
-                                {% else %}
-                                <span class="text-muted small">No website link</span>
-                                {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            {% if case.category %}
+                            <div class="mb-2">
+                                <span class="badge bg-primary">{{ case.category.name }}</span>
+                            </div>
+                            {% endif %}
+                            <h5 class="card-title fw-bold mb-2 text-dark">{{ case.name }}</h5>
+                            {% if case.sub_name %}
+                            <h6 class="card-subtitle text-muted mb-3">{{ case.sub_name }}</h6>
+                            {% endif %}
 
-                                <a href="{{ url_for('frontend.case_detail', id=case.id) }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-eye me-1"></i>Details
-                                </a>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-end gap-2 align-items-center">
+                                    {% if case.url %}
+                                    <a href="{{ case.url }}" class="btn btn-outline-primary btn-sm" target="_blank" onclick="event.stopPropagation();">
+                                        <i class="fas fa-external-link-alt me-1"></i>View Website
+                                    </a>
+                                    {% endif %}
+
+                                    <span class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>Details
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Data</h4>
+                    <p class="text-muted">No cases available at the moment</p>
+                    {% if category %}
+                    <a href="{{ url_for('frontend.cases') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>View All Cases
+                    </a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -96,7 +114,7 @@
                     <ul class="pagination justify-content-center">
                         {% if cases.has_prev %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('frontend.cases', page=cases.prev_num, sort=current_sort) }}">Previous</a>
+                            <a class="page-link" href="{{ url_for('frontend.cases', page=cases.prev_num, sort=current_sort, category=current_category) }}">Previous</a>
                         </li>
                         {% else %}
                         <li class="page-item disabled">
@@ -112,7 +130,7 @@
                                 </li>
                                 {% else %}
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('frontend.cases', page=page_num, sort=current_sort) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('frontend.cases', page=page_num, sort=current_sort, category=current_category) }}">{{ page_num }}</a>
                                 </li>
                                 {% endif %}
                             {% else %}
@@ -122,7 +140,7 @@
 
                         {% if cases.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('frontend.cases', page=cases.next_num, sort=current_sort) }}">Next</a>
+                            <a class="page-link" href="{{ url_for('frontend.cases', page=cases.next_num, sort=current_sort, category=current_category) }}">Next</a>
                         </li>
                         {% else %}
                         <li class="page-item disabled">
@@ -144,7 +162,12 @@ $(document).ready(function() {
     // Sort functionality
     $('#sortSelect').change(function() {
         const sort = $(this).val();
-        window.location.href = '{{ url_for("frontend.cases") }}?sort=' + sort;
+        const category = '{{ current_category or "" }}';
+        let url = '{{ url_for("frontend.cases") }}?sort=' + sort;
+        if (category) {
+            url += '&category=' + category;
+        }
+        window.location.href = url;
     });
 });
 </script>
@@ -152,8 +175,19 @@ $(document).ready(function() {
 
 {% block styles %}
 <style>
+.card-link {
+    display: block;
+    color: inherit;
+}
+
+.card-link:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
 .hover-lift {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
 }
 
 .hover-lift:hover {

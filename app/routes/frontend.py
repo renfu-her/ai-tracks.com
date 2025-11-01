@@ -27,6 +27,12 @@ def cases():
     return FrontendController.cases()
 
 
+@frontend_bp.route('/cases/category/<category_slug>')
+def cases_by_category(category_slug):
+    """Cases listing page by category."""
+    return FrontendController.cases_by_category(category_slug)
+
+
 @frontend_bp.route('/cases/<int:id>')
 def case_detail(id):
     """Case detail page."""

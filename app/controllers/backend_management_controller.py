@@ -4,7 +4,7 @@ from flask_login import login_required
 from datetime import datetime
 from sqlalchemy import desc, asc
 from app import db
-from app.models import ProjectCase, CasePhoto, News, Slider, Contact
+from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory
 from app.utils.auth import admin_required
 from app.services.image_service import ImageService
 from werkzeug.utils import secure_filename
@@ -40,10 +40,14 @@ class BackendManagementController:
             error_out=False
         )
         
+        # Get all categories for dropdown
+        categories = ProductCategory.query.order_by(asc(ProductCategory.sort_order)).all()
+        
         return render_template(
             'backend/cases.html',
             cases=cases_pagination,
-            current_sort=sort
+            current_sort=sort,
+            categories=categories
         )
     
     @staticmethod
@@ -56,17 +60,27 @@ class BackendManagementController:
             sub_name = request.form.get('sub_name', '')
             url = request.form.get('url', '')
             content = request.form.get('content', '')
+            category_id = request.form.get('category_id')
             status = request.form.get('status') == 'on'
             
             if not name or not content:
                 flash('名稱和內容為必填項目', 'danger')
                 return redirect(url_for('backend.cases'))
             
+            # Validate category_id if provided
+            category_id = int(category_id) if category_id and category_id != '' else None
+            if category_id:
+                category = ProductCategory.query.get(category_id)
+                if not category:
+                    flash('選擇的類別不存在', 'danger')
+                    return redirect(url_for('backend.cases'))
+            
             case = ProjectCase(
                 name=name,
                 sub_name=sub_name,
                 url=url,
                 content=content,
+                category_id=category_id,
                 status=status
             )
             
@@ -196,7 +210,8 @@ class BackendManagementController:
         case = ProjectCase.query.get_or_404(case_id)
         # Load photos ordered by sort_order
         photos = case.case_photos.order_by(CasePhoto.sort_order).all()
-        return render_template('backend/edit_case.html', case=case, photos=photos)
+        categories = ProductCategory.query.order_by(asc(ProductCategory.sort_order)).all()
+        return render_template('backend/edit_case.html', case=case, photos=photos, categories=categories)
     
     @staticmethod
     @login_required
@@ -210,16 +225,26 @@ class BackendManagementController:
             sub_name = request.form.get('sub_name', '')
             url = request.form.get('url', '')
             content = request.form.get('content', '')
+            category_id = request.form.get('category_id')
             status = request.form.get('status') == 'on'
             
             if not name or not content:
                 flash('名稱和內容為必填項目', 'danger')
                 return redirect(url_for('backend.edit_case', case_id=case_id))
             
+            # Validate category_id if provided
+            category_id = int(category_id) if category_id and category_id != '' else None
+            if category_id:
+                category = ProductCategory.query.get(category_id)
+                if not category:
+                    flash('選擇的類別不存在', 'danger')
+                    return redirect(url_for('backend.edit_case', case_id=case_id))
+            
             case.name = name
             case.sub_name = sub_name
             case.url = url
             case.content = content
+            case.category_id = category_id
             case.status = status
             
             try:
@@ -466,4 +491,146 @@ class BackendManagementController:
             flash(f'刪除失敗: {str(e)}', 'danger')
         
         return redirect(url_for('backend.contacts'))
+    
+    # ========== Product Categories Management ==========
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def categories():
+        """Categories management page."""
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        
+        categories_pagination = ProductCategory.query.order_by(
+            asc(ProductCategory.sort_order),
+            asc(ProductCategory.name)
+        ).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+        
+        return render_template('backend/categories.html', categories=categories_pagination)
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def create_category():
+        """Create new category."""
+        if request.method == 'POST':
+            name = request.form.get('name')
+            slug = request.form.get('slug', '')
+            description = request.form.get('description', '')
+            status = request.form.get('status') == 'on'
+            sort_order = request.form.get('sort_order', 0, type=int)
+            
+            if not name:
+                flash('類別名稱為必填項目', 'danger')
+                return redirect(url_for('backend.categories'))
+            
+            # Generate slug from name if not provided
+            if not slug:
+                slug = name.lower().replace(' ', '-').replace('_', '-')
+            
+            # Check if slug already exists
+            existing = ProductCategory.query.filter_by(slug=slug).first()
+            if existing:
+                flash('該 slug 已存在，請使用其他名稱', 'danger')
+                return redirect(url_for('backend.categories'))
+            
+            category = ProductCategory(
+                name=name,
+                slug=slug,
+                description=description,
+                status=status,
+                sort_order=sort_order
+            )
+            
+            try:
+                db.session.add(category)
+                db.session.commit()
+                flash('類別創建成功', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'創建類別失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.categories'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def edit_category(category_id):
+        """Edit category page."""
+        category = ProductCategory.query.get_or_404(category_id)
+        return render_template('backend/edit_category.html', category=category)
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_category(category_id):
+        """Update category."""
+        category = ProductCategory.query.get_or_404(category_id)
+        
+        if request.method == 'POST':
+            name = request.form.get('name')
+            slug = request.form.get('slug', '')
+            description = request.form.get('description', '')
+            status = request.form.get('status') == 'on'
+            sort_order = request.form.get('sort_order', 0, type=int)
+            
+            if not name:
+                flash('類別名稱為必填項目', 'danger')
+                return redirect(url_for('backend.edit_category', category_id=category_id))
+            
+            # Generate slug from name if not provided
+            if not slug:
+                slug = name.lower().replace(' ', '-').replace('_', '-')
+            
+            # Check if slug already exists (excluding current category)
+            existing = ProductCategory.query.filter(
+                ProductCategory.slug == slug,
+                ProductCategory.id != category_id
+            ).first()
+            if existing:
+                flash('該 slug 已存在，請使用其他名稱', 'danger')
+                return redirect(url_for('backend.edit_category', category_id=category_id))
+            
+            category.name = name
+            category.slug = slug
+            category.description = description
+            category.status = status
+            category.sort_order = sort_order
+            
+            try:
+                db.session.commit()
+                flash('類別更新成功', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'更新類別失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.categories'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def delete_category(category_id):
+        """Delete category."""
+        category = ProductCategory.query.get_or_404(category_id)
+        
+        # Check if category has associated cases
+        case_count = category.project_cases.count()
+        if case_count > 0:
+            flash(f'無法刪除此類別，因為有 {case_count} 個案例正在使用此類別', 'danger')
+            return redirect(url_for('backend.categories'))
+        
+        try:
+            db.session.delete(category)
+            db.session.commit()
+            flash('類別刪除成功', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'刪除類別失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.categories'))
 

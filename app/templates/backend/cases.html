@@ -39,6 +39,7 @@
                     <tr>
                         <th>ID</th>
                         <th>名稱</th>
+                        <th>類別</th>
                         <th>副標題</th>
                         <th>狀態</th>
                         <th>照片數</th>
@@ -54,6 +55,13 @@
                             <strong>{{ case.name }}</strong>
                             {% if case.url %}
                             <br><small><a href="{{ case.url }}" target="_blank" class="text-decoration-none">{{ case.url }}</a></small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if case.category %}
+                            <span class="badge bg-primary">{{ case.category.name }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         <td>{{ case.sub_name or '-' }}</td>
@@ -162,6 +170,16 @@
                     <div class="mb-3">
                         <label for="url" class="form-label">網址</label>
                         <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">類別</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">無類別</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">

@@ -55,6 +55,9 @@ class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
     SQLALCHEMY_ECHO = False
+    # Enable template auto-reload for development
+    TEMPLATES_AUTO_RELOAD = True
+    EXPLAIN_TEMPLATE_LOADING = False
 
 
 class ProductionConfig(Config):

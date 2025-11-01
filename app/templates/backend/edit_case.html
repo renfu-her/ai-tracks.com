@@ -32,6 +32,16 @@
             </div>
             
             <div class="mb-3">
+                <label for="category_id" class="form-label">類別</label>
+                <select class="form-select" id="category_id" name="category_id">
+                    <option value="">無類別</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if case.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
                 <label for="content" class="form-label">內容 <span class="text-danger">*</span></label>
                 <textarea class="form-control" id="content" name="content" rows="10" required placeholder="支援 Markdown 格式">{{ case.content }}</textarea>
                 <small class="form-text text-muted">
