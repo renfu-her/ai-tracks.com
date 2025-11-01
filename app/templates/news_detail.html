@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ news.title }} - News Detail - AI Tracks{% endblock %}
+
+{% block description %}{{ news.title }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold mb-3">{{ news.title }}</h1>
+                <p class="lead">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Published on {{ news.published_at|format_date }}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News Detail Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Featured Image -->
+                {% if news.image %}
+                <div class="mb-4">
+                    <img src="{{ news.image|storage_url }}" alt="{{ news.title }}"
+                         class="img-fluid rounded shadow" style="width: 100%; max-height: 500px; object-fit: cover;">
+                </div>
+                {% endif %}
+
+                <!-- News Content -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4">
+                        <div class="markdown-content">
+                            {{ news.content|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share Section -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Share this article</h5>
+                        <div class="d-flex gap-2">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-info">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-success">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- News Info -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Article Information</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-calendar text-primary me-2"></i>
+                                <small class="text-muted">{{ news.published_at|format_date }}</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-clock text-primary me-2"></i>
+                                <small class="text-muted">Updated: {{ news.updated_at|format_date }}</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Related News -->
+                {% if related_news|length > 0 %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Related News</h5>
+                        {% for related_item in related_news %}
+                        <div class="mb-3">
+                            <a href="{{ url_for('frontend.news_detail', id=related_item.id) }}" class="text-decoration-none">
+                                <div class="d-flex">
+                                    {% if related_item.image %}
+                                    <img src="{{ related_item.image|storage_url }}" 
+                                         alt="{{ related_item.title }}"
+                                         class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                    {% else %}
+                                    <div class="me-3 bg-light d-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px; border-radius: 8px;">
+                                        <i class="fas fa-newspaper text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-1">{{ related_item.title }}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            {{ related_item.published_at|format_date }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Back to News -->
+                <div class="mt-4">
+                    <a href="{{ url_for('frontend.news') }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Back to News
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+<style>
+.markdown-content {
+    font-size: 16px;
+    line-height: 1.8;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Render markdown content
+    const contentElement = document.querySelector('.markdown-content');
+    if (contentElement && contentElement.textContent) {
+        const markdownText = contentElement.textContent;
+        contentElement.innerHTML = marked.parse(markdownText);
+        contentElement.classList.add('markdown-body');
+    }
+});
+</script>
+{% endblock %}
+

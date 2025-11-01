@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ case.name }} - Case Detail - AI Tracks{% endblock %}
+
+{% block description %}{{ case.name }} - {{ case.sub_name|default('Professional AI technology case study') }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold mb-3">{{ case.name }}</h1>
+                {% if case.sub_name %}
+                <p class="lead">{{ case.sub_name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Case Detail Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Case Photos Carousel -->
+                {% if case.case_photos.count() > 0 %}
+                <div id="casePhotosCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for photo in case.case_photos.all() %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ photo.image|storage_url }}" class="d-block w-100" alt="{{ case.name }}"
+                                 style="max-height: 500px; object-fit: contain; background: #f8f9fa;">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if case.case_photos.count() > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#casePhotosCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#casePhotosCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Case Content -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold mb-4">Case Details</h3>
+                        
+                        {% if case.url %}
+                        <div class="mb-4">
+                            <a href="{{ case.url }}" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-external-link-alt me-2"></i>Visit Website
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <div class="markdown-content">
+                            {{ case.content|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Case Info -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Project Information</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-calendar text-primary me-2"></i>
+                                <small class="text-muted">Published: {{ case.created_at|format_date }}</small>
+                            </li>
+                            {% if case.url %}
+                            <li class="mb-2">
+                                <i class="fas fa-link text-primary me-2"></i>
+                                <small><a href="{{ case.url }}" target="_blank" class="text-decoration-none">Visit Website</a></small>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Related Cases -->
+                {% if related_cases|length > 0 %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Related Cases</h5>
+                        {% for related_case in related_cases %}
+                        <div class="mb-3">
+                            <a href="{{ url_for('frontend.case_detail', id=related_case.id) }}" class="text-decoration-none">
+                                <div class="d-flex">
+                                    {% if related_case.case_photos.count() > 0 %}
+                                    <img src="{{ related_case.case_photos.first().image|storage_url }}" 
+                                         alt="{{ related_case.name }}"
+                                         class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                    {% else %}
+                                    <div class="me-3 bg-light d-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px; border-radius: 8px;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-1">{{ related_case.name }}</h6>
+                                        {% if related_case.sub_name %}
+                                        <small class="text-muted">{{ related_case.sub_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+<style>
+.markdown-content {
+    font-size: 16px;
+    line-height: 1.8;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Render markdown content
+    const contentElement = document.querySelector('.markdown-content');
+    if (contentElement && contentElement.textContent) {
+        const markdownText = contentElement.textContent;
+        contentElement.innerHTML = marked.parse(markdownText);
+        contentElement.classList.add('markdown-body');
+    }
+});
+</script>
+{% endblock %}
+
