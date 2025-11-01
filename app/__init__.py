@@ -65,6 +65,12 @@ def create_app(config_name=None):
     app.jinja_env.filters['storage_url'] = storage_url
     app.jinja_env.filters['format_date'] = format_date
     
+    # Make csrf_token available in templates
+    from flask_wtf.csrf import generate_csrf
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf)
+    
     # Create upload directories if they don't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'cases'), exist_ok=True)

@@ -2,6 +2,7 @@
 from flask import Blueprint
 from flask_login import login_required
 from app.controllers.backend_controller import BackendController
+from app.controllers.backend_management_controller import BackendManagementController
 from app.utils.auth import admin_required
 
 # Create blueprint
@@ -62,4 +63,95 @@ def delete_user(user_id):
 def toggle_user_status(user_id):
     """Toggle user status."""
     return BackendController.toggle_user_status(user_id)
+
+
+# Cases management (requires admin)
+@backend_bp.route('/cases')
+@login_required
+@admin_required
+def cases():
+    """Cases management."""
+    return BackendManagementController.cases()
+
+
+@backend_bp.route('/cases/create', methods=['POST'])
+@login_required
+@admin_required
+def create_case():
+    """Create case."""
+    return BackendManagementController.create_case()
+
+
+@backend_bp.route('/cases/<int:case_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_case(case_id):
+    """Delete case."""
+    return BackendManagementController.delete_case(case_id)
+
+
+@backend_bp.route('/cases/<int:case_id>/toggle-status', methods=['POST'])
+@login_required
+@admin_required
+def toggle_case_status(case_id):
+    """Toggle case status."""
+    return BackendManagementController.toggle_case_status(case_id)
+
+
+# News management (requires admin)
+@backend_bp.route('/news')
+@login_required
+@admin_required
+def news():
+    """News management."""
+    return BackendManagementController.news()
+
+
+@backend_bp.route('/news/create', methods=['POST'])
+@login_required
+@admin_required
+def create_news():
+    """Create news."""
+    return BackendManagementController.create_news()
+
+
+@backend_bp.route('/news/<int:news_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_news(news_id):
+    """Delete news."""
+    return BackendManagementController.delete_news(news_id)
+
+
+@backend_bp.route('/news/<int:news_id>/toggle-status', methods=['POST'])
+@login_required
+@admin_required
+def toggle_news_status(news_id):
+    """Toggle news status."""
+    return BackendManagementController.toggle_news_status(news_id)
+
+
+# Contacts management (requires admin)
+@backend_bp.route('/contacts')
+@login_required
+@admin_required
+def contacts():
+    """Contacts management."""
+    return BackendManagementController.contacts()
+
+
+@backend_bp.route('/contacts/<int:contact_id>/update-status', methods=['POST'])
+@login_required
+@admin_required
+def update_contact_status(contact_id):
+    """Update contact status."""
+    return BackendManagementController.update_contact_status(contact_id)
+
+
+@backend_bp.route('/contacts/<int:contact_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_contact(contact_id):
+    """Delete contact."""
+    return BackendManagementController.delete_contact(contact_id)
 

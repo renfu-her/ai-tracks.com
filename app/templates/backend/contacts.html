@@ -1,0 +1,209 @@
+{% extends "backend/base.html" %}
+
+{% block title %}聯絡訊息 - 後台管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-envelope me-2"></i>聯絡訊息</h1>
+</div>
+
+<!-- Filter -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('backend.contacts', status='all') }}" 
+               class="btn btn-sm btn-{{ 'primary' if current_status == 'all' else 'outline-primary' }}">
+                全部 ({{ contacts.total }})
+            </a>
+            <a href="{{ url_for('backend.contacts', status='pending') }}" 
+               class="btn btn-sm btn-{{ 'warning' if current_status == 'pending' else 'outline-warning' }}">
+                待處理
+            </a>
+            <a href="{{ url_for('backend.contacts', status='processing') }}" 
+               class="btn btn-sm btn-{{ 'info' if current_status == 'processing' else 'outline-info' }}">
+                處理中
+            </a>
+            <a href="{{ url_for('backend.contacts', status='completed') }}" 
+               class="btn btn-sm btn-{{ 'success' if current_status == 'completed' else 'outline-success' }}">
+                已完成
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Contacts Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>姓名</th>
+                        <th>電子郵件</th>
+                        <th>電話</th>
+                        <th>主旨</th>
+                        <th>狀態</th>
+                        <th>建立時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts.items %}
+                    <tr>
+                        <td>{{ contact.id }}</td>
+                        <td><strong>{{ contact.name }}</strong></td>
+                        <td>{{ contact.email }}</td>
+                        <td>{{ contact.phone or '-' }}</td>
+                        <td>
+                            <strong>{{ contact.subject }}</strong>
+                            <br><small class="text-muted">{{ contact.message[:50] }}{% if contact.message|length > 50 %}...{% endif %}</small>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('backend.update_contact_status', contact_id=contact.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="pending" {% if contact.status == 'pending' %}selected{% endif %}>待處理</option>
+                                    <option value="processing" {% if contact.status == 'processing' %}selected{% endif %}>處理中</option>
+                                    <option value="completed" {% if contact.status == 'completed' %}selected{% endif %}>已完成</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td>{{ contact.created_at|format_date }}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#contactModal{{ contact.id }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('backend.delete_contact', contact_id=contact.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="return confirm('確定要刪除此聯絡訊息嗎？此操作無法復原！')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <!-- Contact Detail Modal -->
+                    <div class="modal fade" id="contactModal{{ contact.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">聯絡訊息詳情</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>姓名：</strong> {{ contact.name }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>電子郵件：</strong> {{ contact.email }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>電話：</strong> {{ contact.phone or '-' }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>狀態：</strong> 
+                                            <span class="badge bg-{{ 'warning' if contact.status == 'pending' else 'info' if contact.status == 'processing' else 'success' }}">
+                                                {{ '待處理' if contact.status == 'pending' else '處理中' if contact.status == 'processing' else '已完成' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>主旨：</strong>
+                                        <p>{{ contact.subject }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>訊息內容：</strong>
+                                        <p class="border p-3 rounded">{{ contact.message }}</p>
+                                    </div>
+                                    {% if contact.reply %}
+                                    <div class="mb-3">
+                                        <strong>回覆內容：</strong>
+                                        <p class="border p-3 rounded bg-light">{{ contact.reply }}</p>
+                                    </div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>建立時間：</strong> {{ contact.created_at|format_date }}
+                                        </div>
+                                        {% if contact.replied_at %}
+                                        <div class="col-md-6">
+                                            <strong>回覆時間：</strong> {{ contact.replied_at|format_date }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <form method="POST" action="{{ url_for('backend.update_contact_status', contact_id=contact.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <select name="status" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                                            <option value="pending" {% if contact.status == 'pending' %}selected{% endif %}>待處理</option>
+                                            <option value="processing" {% if contact.status == 'processing' %}selected{% endif %}>處理中</option>
+                                            <option value="completed" {% if contact.status == 'completed' %}selected{% endif %}>已完成</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">更新狀態</button>
+                                    </form>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">尚無聯絡訊息</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if contacts.pages > 1 %}
+        <nav aria-label="Contacts pagination">
+            <ul class="pagination justify-content-center">
+                {% if contacts.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('backend.contacts', page=contacts.prev_num, status=current_status) }}">上一頁</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">上一頁</span>
+                </li>
+                {% endif %}
+                
+                {% for page_num in contacts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        {% if page_num == contacts.page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('backend.contacts', page=page_num, status=current_status) }}">{{ page_num }}</a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if contacts.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('backend.contacts', page=contacts.next_num, status=current_status) }}">下一頁</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">下一頁</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
