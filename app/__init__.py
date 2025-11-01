@@ -61,9 +61,10 @@ def create_app(config_name=None):
     app.register_blueprint(backend_bp, url_prefix='/backend')
     
     # Register template filters and context processors
-    from app.utils.helpers import storage_url, format_date
+    from app.utils.helpers import storage_url, format_date, markdown_to_html
     app.jinja_env.filters['storage_url'] = storage_url
     app.jinja_env.filters['format_date'] = format_date
+    app.jinja_env.filters['markdown'] = markdown_to_html
     
     # Make csrf_token available in templates
     from flask_wtf.csrf import generate_csrf

@@ -2,6 +2,38 @@
 from flask import url_for, current_app
 from datetime import datetime
 import os
+import markdown
+
+
+def markdown_to_html(text):
+    """
+    Convert Markdown text to HTML.
+    
+    Args:
+        text: Markdown formatted text
+        
+    Returns:
+        HTML string
+    """
+    if not text:
+        return ''
+    
+    # Configure Markdown extensions
+    extensions = ['codehilite', 'fenced_code', 'tables']
+    
+    # Convert Markdown to HTML
+    html = markdown.markdown(
+        text,
+        extensions=extensions,
+        extension_configs={
+            'codehilite': {
+                'css_class': 'highlight',
+                'use_pygments': False
+            }
+        }
+    )
+    
+    return html
 
 
 def storage_url(path):
@@ -17,11 +49,14 @@ def storage_url(path):
     if not path:
         return ''
     
+    # Convert backslashes to forward slashes for URL compatibility (Windows compatibility)
+    path = path.replace('\\', '/')
+    
     # Remove leading slashes if present
     path = path.lstrip('/')
     
-    # Return URL for the upload file
-    return url_for('static', filename=f'../uploads/{path}')
+    # Return URL for the upload file using uploads route
+    return url_for('frontend.uploads', filename=path)
 
 
 def format_date(date_obj, format_str='%Y-%m-%d'):

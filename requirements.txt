@@ -15,7 +15,8 @@ email-validator==2.1.0
 
 # Image Processing
 # Pillow 10.1.0 works well with Python 3.12
-Pillow==10.1.0
+# Pillow 12.0.0+ works well with Python 3.13
+Pillow>=10.1.0
 
 # Markdown Support
 Markdown==3.5.1
@@ -24,9 +25,10 @@ Markdown==3.5.1
 python-dotenv==1.0.0
 
 # WSGI Server
-# uWSGI 2.0.23 works well with Python 3.12
+# uWSGI 2.0.23 works well with Python 3.12 on Linux/Unix
 # Note: uWSGI is primarily for Linux/Unix. For Windows development, use Flask's built-in server.
-uWSGI==2.0.23
+# Skip uWSGI installation on Windows by commenting out the next line or using: pip install -r requirements.txt --ignore-installed uWSGI
+# uWSGI==2.0.23
 
 # Authentication
 Flask-Login==0.6.3

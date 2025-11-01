@@ -1,9 +1,17 @@
 """Frontend routes - equivalent to Laravel's web.php routes."""
-from flask import Blueprint
+from flask import Blueprint, send_from_directory, current_app
 from app.controllers.frontend_controller import FrontendController
+import os
 
 # Create blueprint
 frontend_bp = Blueprint('frontend', __name__)
+
+
+@frontend_bp.route('/uploads/<path:filename>')
+def uploads(filename):
+    """Serve uploaded files."""
+    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+    return send_from_directory(upload_folder, filename)
 
 
 # Frontend Routes

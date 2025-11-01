@@ -33,7 +33,8 @@ class ImageService:
         # Create subfolder if specified
         if subfolder:
             folder_path = os.path.join(upload_folder, subfolder)
-            relative_path = os.path.join(subfolder, filename)
+            # Use forward slash for URL compatibility (even on Windows)
+            relative_path = f"{subfolder}/{filename}"
         else:
             folder_path = upload_folder
             relative_path = filename
@@ -79,6 +80,9 @@ class ImageService:
         """
         if not relative_path:
             return False
+        
+        # Convert forward slashes to OS-specific path separator for file operations
+        relative_path = relative_path.replace('/', os.sep)
         
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         filepath = os.path.join(upload_folder, relative_path)

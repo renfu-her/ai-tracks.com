@@ -62,8 +62,8 @@
                         </div>
                         {% endif %}
 
-                        <div class="markdown-content">
-                            {{ case.content|safe }}
+                        <div class="markdown-content markdown-body">
+                            {{ case.content|markdown|safe }}
                         </div>
                     </div>
                 </div>
@@ -141,17 +141,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Render markdown content
-    const contentElement = document.querySelector('.markdown-content');
-    if (contentElement && contentElement.textContent) {
-        const markdownText = contentElement.textContent;
-        contentElement.innerHTML = marked.parse(markdownText);
-        contentElement.classList.add('markdown-body');
-    }
-});
-</script>
 {% endblock %}
 
