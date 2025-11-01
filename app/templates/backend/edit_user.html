@@ -1,0 +1,60 @@
+{% extends "backend/base.html" %}
+
+{% block title %}編輯用戶 - 後台管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-edit me-2"></i>編輯用戶</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('backend.users') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('backend.edit_user', user_id=user.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="username" class="form-label">用戶名 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">電子郵件 <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">密碼</label>
+                <input type="password" class="form-control" id="password" name="password" minlength="6" placeholder="留空則不修改密碼">
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> 留空則不修改密碼，如需修改請輸入新密碼（至少6個字符）
+                </small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="role" class="form-label">角色</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>一般用戶</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>管理員</option>
+                </select>
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">
+                    啟用
+                </label>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('backend.users') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">更新</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

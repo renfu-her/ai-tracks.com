@@ -1,5 +1,5 @@
 """Backend routes for admin panel."""
-from flask import Blueprint
+from flask import Blueprint, request
 from flask_login import login_required
 from app.controllers.backend_controller import BackendController
 from app.controllers.backend_management_controller import BackendManagementController
@@ -49,6 +49,16 @@ def create_user():
     return BackendController.create_user()
 
 
+@backend_bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    """Edit user."""
+    if request.method == 'POST':
+        return BackendController.update_user(user_id)
+    return BackendController.edit_user(user_id)
+
+
 @backend_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @login_required
 @admin_required
@@ -82,6 +92,16 @@ def create_case():
     return BackendManagementController.create_case()
 
 
+@backend_bp.route('/cases/<int:case_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_case(case_id):
+    """Edit case."""
+    if request.method == 'POST':
+        return BackendManagementController.update_case(case_id)
+    return BackendManagementController.edit_case(case_id)
+
+
 @backend_bp.route('/cases/<int:case_id>/delete', methods=['POST'])
 @login_required
 @admin_required
@@ -113,6 +133,16 @@ def news():
 def create_news():
     """Create news."""
     return BackendManagementController.create_news()
+
+
+@backend_bp.route('/news/<int:news_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_news(news_id):
+    """Edit news."""
+    if request.method == 'POST':
+        return BackendManagementController.update_news(news_id)
+    return BackendManagementController.edit_news(news_id)
 
 
 @backend_bp.route('/news/<int:news_id>/delete', methods=['POST'])

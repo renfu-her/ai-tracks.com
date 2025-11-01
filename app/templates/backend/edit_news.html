@@ -1,0 +1,108 @@
+{% extends "backend/base.html" %}
+
+{% block title %}編輯消息 - 後台管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-edit me-2"></i>編輯消息</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('backend.news') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>返回列表
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('backend.edit_news', news_id=news.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="title" class="form-label">標題 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ news.title }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">內容 <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="content" name="content" rows="10" required placeholder="支援 Markdown 格式">{{ news.content }}</textarea>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i> 支援 Markdown 語法，可即時預覽
+                </small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="published_at" class="form-label">發布日期</label>
+                <input type="date" class="form-control" id="published_at" name="published_at" value="{{ news.published_at.strftime('%Y-%m-%d') if news.published_at else '' }}">
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if news.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">
+                    啟用
+                </label>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('backend.news') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">更新</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Initialize SimpleMDE Markdown Editor
+    let newsEditor = null;
+    
+    // Initialize editor when page loads
+    if (!newsEditor) {
+        // Remove required attribute to avoid validation error when textarea is hidden
+        const contentTextarea = document.getElementById('content');
+        contentTextarea.removeAttribute('required');
+        
+        newsEditor = new SimpleMDE({
+            element: contentTextarea,
+            spellChecker: false,
+            autosave: {
+                enabled: false
+            },
+            placeholder: '在此輸入 Markdown 內容...\n\n支援的語法：\n- **粗體**\n- *斜體*\n- # 標題\n- [連結](url)\n- ![圖片](url)\n- 列表項目',
+            toolbar: [
+                'bold', 'italic', 'strikethrough', '|',
+                'heading-1', 'heading-2', 'heading-3', '|',
+                'code', 'quote', 'unordered-list', 'ordered-list', '|',
+                'link', 'image', 'table', '|',
+                'preview', 'side-by-side', 'fullscreen', '|',
+                'guide'
+            ],
+            minHeight: '300px',
+            status: ['lines', 'words', 'cursor'],
+            renderingConfig: {
+                singleLineBreaks: false,
+                codeSyntaxHighlighting: true
+            }
+        });
+    }
+    
+    // Sync editor content before form submit
+    $('form').on('submit', function(e) {
+        if (newsEditor) {
+            // Manual validation before syncing
+            const contentValue = newsEditor.value();
+            if (!contentValue || contentValue.trim() === '') {
+                e.preventDefault();
+                alert('請輸入內容');
+                newsEditor.codemirror.focus();
+                return false;
+            }
+            
+            // Sync content to textarea
+            newsEditor.toTextArea();
+        }
+    });
+});
+</script>
+{% endblock %}
+

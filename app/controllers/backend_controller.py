@@ -129,6 +129,65 @@ class BackendController:
     @staticmethod
     @login_required
     @admin_required
+    def edit_user(user_id):
+        """Edit user page."""
+        user = User.query.get_or_404(user_id)
+        if user_id == current_user.id:
+            flash('無法編輯自己的帳號', 'danger')
+            return redirect(url_for('backend.users'))
+        return render_template('backend/edit_user.html', user=user)
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_user(user_id):
+        """Update user."""
+        if user_id == current_user.id:
+            flash('無法編輯自己的帳號', 'danger')
+            return redirect(url_for('backend.users'))
+        
+        user = User.query.get_or_404(user_id)
+        
+        if request.method == 'POST':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            role = request.form.get('role', 'user')
+            is_active = request.form.get('is_active') == 'on'
+            
+            # Check if username already exists (excluding current user)
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user and existing_user.id != user_id:
+                flash('用戶名已存在', 'danger')
+                return redirect(url_for('backend.edit_user', user_id=user_id))
+            
+            # Check if email already exists (excluding current user)
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email and existing_email.id != user_id:
+                flash('電子郵件已存在', 'danger')
+                return redirect(url_for('backend.edit_user', user_id=user_id))
+            
+            user.username = username
+            user.email = email
+            user.role = role
+            user.is_active = is_active
+            
+            # Update password if provided
+            if password:
+                user.set_password(password)
+            
+            try:
+                db.session.commit()
+                flash('用戶更新成功', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'更新用戶失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.users'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
     def delete_user(user_id):
         """Delete user."""
         if user_id == current_user.id:

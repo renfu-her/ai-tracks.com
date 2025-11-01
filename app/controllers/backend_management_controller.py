@@ -80,6 +80,47 @@ class BackendManagementController:
     @staticmethod
     @login_required
     @admin_required
+    def edit_case(case_id):
+        """Edit case page."""
+        case = ProjectCase.query.get_or_404(case_id)
+        return render_template('backend/edit_case.html', case=case)
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_case(case_id):
+        """Update case."""
+        case = ProjectCase.query.get_or_404(case_id)
+        
+        if request.method == 'POST':
+            name = request.form.get('name')
+            sub_name = request.form.get('sub_name', '')
+            url = request.form.get('url', '')
+            content = request.form.get('content', '')
+            status = request.form.get('status') == 'on'
+            
+            if not name or not content:
+                flash('名稱和內容為必填項目', 'danger')
+                return redirect(url_for('backend.edit_case', case_id=case_id))
+            
+            case.name = name
+            case.sub_name = sub_name
+            case.url = url
+            case.content = content
+            case.status = status
+            
+            try:
+                db.session.commit()
+                flash('案例更新成功', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'更新案例失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.cases'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
     def delete_case(case_id):
         """Delete case."""
         case = ProjectCase.query.get_or_404(case_id)
@@ -164,6 +205,50 @@ class BackendManagementController:
             except Exception as e:
                 db.session.rollback()
                 flash(f'創建消息失敗: {str(e)}', 'danger')
+        
+        return redirect(url_for('backend.news'))
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def edit_news(news_id):
+        """Edit news page."""
+        news = News.query.get_or_404(news_id)
+        return render_template('backend/edit_news.html', news=news)
+    
+    @staticmethod
+    @login_required
+    @admin_required
+    def update_news(news_id):
+        """Update news."""
+        news = News.query.get_or_404(news_id)
+        
+        if request.method == 'POST':
+            title = request.form.get('title')
+            content = request.form.get('content', '')
+            published_at = request.form.get('published_at')
+            is_active = request.form.get('is_active') == 'on'
+            
+            if not title or not content:
+                flash('標題和內容為必填項目', 'danger')
+                return redirect(url_for('backend.edit_news', news_id=news_id))
+            
+            try:
+                published_date = datetime.strptime(published_at, '%Y-%m-%d').date() if published_at else news.published_at
+            except:
+                published_date = news.published_at
+            
+            news.title = title
+            news.content = content
+            news.published_at = published_date
+            news.is_active = is_active
+            
+            try:
+                db.session.commit()
+                flash('消息更新成功', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'更新消息失敗: {str(e)}', 'danger')
         
         return redirect(url_for('backend.news'))
     
