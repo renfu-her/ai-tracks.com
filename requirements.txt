@@ -28,8 +28,8 @@ python-dotenv==1.0.0
 # Note: uWSGI is primarily for Linux/Unix. For Windows development, use Flask's built-in server.
 uWSGI==2.0.23
 
-# Utilities
-python-dateutil==2.8.2
+# Authentication
+Flask-Login==0.6.3
 
 # Database Drivers
 PyMySQL==1.1.0          # MySQL (required for MySQL database)

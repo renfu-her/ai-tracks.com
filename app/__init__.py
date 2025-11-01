@@ -4,11 +4,20 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager
 
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
+login_manager = LoginManager()
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Load user from session."""
+    from app.models.user import User
+    return User.query.get(int(user_id))
 
 
 def create_app(config_name=None):
@@ -28,6 +37,10 @@ def create_app(config_name=None):
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = 'backend.login'
+    login_manager.login_message = '請先登入以訪問此頁面'
+    login_manager.login_message_category = 'info'
     
     # Configure database engine options for MySQL
     if 'mysql' in app.config['SQLALCHEMY_DATABASE_URI']:
@@ -43,6 +56,9 @@ def create_app(config_name=None):
     # Register blueprints
     from app.routes.frontend import frontend_bp
     app.register_blueprint(frontend_bp)
+    
+    from app.routes.backend import backend_bp
+    app.register_blueprint(backend_bp, url_prefix='/backend')
     
     # Register template filters and context processors
     from app.utils.helpers import storage_url, format_date

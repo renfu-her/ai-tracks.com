@@ -2,7 +2,7 @@
 import sys
 import pymysql
 from app import create_app, db
-from app.models import ProjectCase, CasePhoto, News, Slider, Contact
+from app.models import ProjectCase, CasePhoto, News, Slider, Contact, User
 
 # Fix Windows console encoding
 if sys.platform == 'win32':
