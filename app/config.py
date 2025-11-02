@@ -7,6 +7,39 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def get_database_uri():
+    """
+    Get database URI from environment variables.
+    
+    Supports two formats:
+    1. DATABASE_URL (full connection string)
+       Example: mysql+pymysql://user:password@host:port/database
+    
+    2. Individual database settings (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
+       Will construct MySQL connection string automatically
+    """
+    # First, try to get DATABASE_URL directly
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        return database_url
+    
+    # If DATABASE_URL not set, try to construct from individual settings
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '3306')
+    db_user = os.getenv('DB_USER', 'root')
+    db_password = os.getenv('DB_PASSWORD', '')
+    db_name = os.getenv('DB_NAME', 'ai-tracks')
+    db_driver = os.getenv('DB_DRIVER', 'pymysql')  # pymysql or mysqlclient
+    
+    # Construct MySQL connection string
+    if db_password:
+        database_uri = f'mysql+{db_driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+    else:
+        database_uri = f'mysql+{db_driver}://{db_user}@{db_host}:{db_port}/{db_name}'
+    
+    return database_uri
+
+
 class Config:
     """Base configuration."""
     
@@ -15,13 +48,11 @@ class Config:
     
     # Database
     # Support for MySQL, PostgreSQL, and SQLite
+    # Can use DATABASE_URL (full connection string) or individual DB_* variables
     # MySQL format: mysql+pymysql://username:password@host:port/database
     # SQLite format: sqlite:///database.db
     # PostgreSQL format: postgresql://username:password@host:port/database
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL',
-        'mysql+pymysql://root:@localhost:3306/ai-tracks'  # Default MySQL config
-    )
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
