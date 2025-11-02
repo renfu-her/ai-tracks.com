@@ -34,6 +34,7 @@ def upgrade():
         sa.Column('url', sa.String(length=255), nullable=True, comment='網址'),
         sa.Column('content', sa.Text(), nullable=False, comment='內容'),
         sa.Column('status', sa.Boolean(), nullable=False, comment='狀態'),
+        sa.Column('views', sa.Integer(), nullable=False, server_default='0', comment='閱讀次數'),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')
@@ -87,6 +88,7 @@ def upgrade():
         sa.Column('content', sa.Text(), nullable=False, comment='內容'),
         sa.Column('published_at', sa.Date(), nullable=False, comment='發布日期'),
         sa.Column('is_active', sa.Boolean(), nullable=False, comment='是否啟用'),
+        sa.Column('views', sa.Integer(), nullable=False, server_default='0', comment='閱讀次數'),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')

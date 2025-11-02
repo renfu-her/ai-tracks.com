@@ -16,6 +16,7 @@ class ProjectCase(db.Model):
     content = db.Column(db.Text, nullable=False, comment='內容')
     category_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), nullable=True, comment='類別ID')
     status = db.Column(db.Boolean, default=True, nullable=False, comment='狀態')
+    views = db.Column(db.Integer, default=0, nullable=False, comment='閱讀次數')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -68,8 +69,14 @@ class ProjectCase(db.Model):
             'category_id': self.category_id,
             'category': self.category.to_dict() if self.category else None,
             'status': self.status,
+            'views': self.views or 0,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'case_photos': [photo.to_dict() for photo in self.case_photos.all()]
-        }
+        )
+    
+    def increment_views(self):
+        """Increment view count."""
+        self.views = (self.views or 0) + 1
+        db.session.commit()
 

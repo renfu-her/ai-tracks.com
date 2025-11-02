@@ -92,6 +92,10 @@
                                 <i class="fas fa-calendar text-primary me-2"></i>
                                 <small class="text-muted">Published: {{ case.created_at|format_date }}</small>
                             </li>
+                            <li class="mb-2">
+                                <i class="fas fa-mouse-pointer text-primary me-2"></i>
+                                <small class="text-muted">{{ case.views or 0 }} views</small>
+                            </li>
                             {% if case.url %}
                             <li class="mb-2">
                                 <i class="fas fa-link text-primary me-2"></i>
@@ -127,10 +131,16 @@
                                         {% if related_case.sub_name %}
                                         <small class="text-muted d-block mb-1">{{ related_case.sub_name }}</small>
                                         {% endif %}
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar-alt me-1"></i>
-                                            {{ related_case.created_at|format_date }}
-                                        </small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                {{ related_case.created_at|format_date }}
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-mouse-pointer text-primary me-1"></i>
+                                                {{ related_case.views or 0 }}
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </a>

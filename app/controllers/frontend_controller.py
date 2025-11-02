@@ -105,6 +105,13 @@ class FrontendController:
         # Get case with photos
         case = ProjectCase.query.filter_by(id=id, status=True).first_or_404()
         
+        # Increment view count when viewing detail page
+        try:
+            case.views = (case.views or 0) + 1
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        
         # Get related cases - same category only, exclude current case
         related_cases = []
         if case.category_id:
@@ -158,6 +165,13 @@ class FrontendController:
         """News detail page."""
         # Get news item
         news_item = News.query.filter_by(id=id, is_active=True).first_or_404()
+        
+        # Increment view count when viewing detail page
+        try:
+            news_item.views = (news_item.views or 0) + 1
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         
         # Get related news (exclude current, get 3)
         related_news = News.query\

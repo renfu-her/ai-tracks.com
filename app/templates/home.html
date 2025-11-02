@@ -158,6 +158,16 @@
                                     <span class="badge bg-primary">{{ case.category.name }}</span>
                                 </div>
                                 {% endif %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {{ case.created_at|format_date }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-mouse-pointer text-primary me-1"></i>
+                                        {{ case.views or 0 }}
+                                    </small>
+                                </div>
                             </div>
                         </a>
                     </div>
@@ -201,7 +211,7 @@
         <div class="row">
             {% for news_item in latest_news %}
             <div class="col-lg-4 col-md-6 mb-4">
-                <a href="{{ url_for('frontend.news') }}" class="text-decoration-none">
+                <a href="{{ url_for('frontend.news_detail', id=news_item.id) }}" class="text-decoration-none">
                     <div class="card h-100 border-0 shadow-sm">
                         {% if news_item.image %}
                         <img src="{{ news_item.image|storage_url }}" class="card-img-top"
@@ -214,6 +224,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <small class="text-muted">{{ news_item.published_at|format_date }}</small>
+                                <small class="text-muted">
+                                    <i class="fas fa-mouse-pointer text-primary me-1"></i>
+                                    {{ news_item.views or 0 }}
+                                </small>
                             </div>
                             <h5 class="card-title fw-bold">{{ news_item.title }}</h5>
                         </div>

@@ -85,15 +85,20 @@
                             {% if case.sub_name %}
                             <h6 class="card-subtitle text-muted mb-3">{{ case.sub_name }}</h6>
                             {% endif %}
-
+                            
                             <div class="mt-auto">
-                                <div class="d-flex justify-content-end gap-2 align-items-center">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-mouse-pointer text-primary me-1"></i>
+                                        {{ case.views or 0 }} views
+                                    </small>
                                     {% if case.url %}
                                     <a href="{{ case.url }}" class="btn btn-outline-primary btn-sm" target="_blank" onclick="event.stopPropagation();">
                                         <i class="fas fa-external-link-alt me-1"></i>View Website
                                     </a>
                                     {% endif %}
-
+                                </div>
+                                <div class="d-flex justify-content-end">
                                     <span class="btn btn-primary btn-sm">
                                         <i class="fas fa-eye me-1"></i>Details
                                     </span>

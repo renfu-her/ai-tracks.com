@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `project_cases` (
     `content` TEXT NOT NULL COMMENT '內容',
     `category_id` INT NULL COMMENT '類別ID',
     `status` BOOLEAN NOT NULL DEFAULT TRUE COMMENT '狀態',
+    `views` INT NOT NULL DEFAULT 0 COMMENT '閱讀次數',
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL,
     FOREIGN KEY (`category_id`) REFERENCES `product_categories`(`id`) ON DELETE SET NULL
@@ -82,6 +83,7 @@ CREATE TABLE IF NOT EXISTS `news` (
     `image` VARCHAR(255) NULL COMMENT '圖片',
     `published_at` DATE NOT NULL COMMENT '發布日期',
     `is_active` BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否啟用',
+    `views` INT NOT NULL DEFAULT 0 COMMENT '閱讀次數',
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
