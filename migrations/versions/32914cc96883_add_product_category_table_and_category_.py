@@ -1,7 +1,7 @@
 """Add product_category table and category_id to project_cases
 
 Revision ID: 32914cc96883
-Revises: a34c0bbd7656
+Revises: 000000000001
 Create Date: 2025-11-01 21:33:21.824882
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = '32914cc96883'
-down_revision = 'a34c0bbd7656'
+down_revision = '000000000001'
 branch_labels = None
 depends_on = None
 
