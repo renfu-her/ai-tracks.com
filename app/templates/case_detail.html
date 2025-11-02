@@ -22,7 +22,7 @@
                 {% endif %}
                 <div class="mt-3">
                     <small class="text-white-50">
-                        <i class="fas fa-mouse-pointer me-2"></i>{{ case.views or 0 }} views
+                        <i class="fas fa-eye me-2"></i>{{ case.views or 0 }} views
                     </small>
                 </div>
             </div>
@@ -98,7 +98,7 @@
                                 <small class="text-muted">Published: {{ case.created_at|format_date }}</small>
                             </li>
                             <li class="mb-2">
-                                <i class="fas fa-mouse-pointer text-primary me-2"></i>
+                                <i class="fas fa-eye text-primary me-2"></i>
                                 <small class="text-muted">{{ case.views or 0 }} views</small>
                             </li>
                             {% if case.url %}
@@ -142,7 +142,7 @@
                                                 {{ related_case.created_at|format_date }}
                                             </small>
                                             <small class="text-muted">
-                                                <i class="fas fa-mouse-pointer text-primary me-1"></i>
+                                                <i class="fas fa-eye text-primary me-1"></i>
                                                 {{ related_case.views or 0 }}
                                             </small>
                                         </div>
