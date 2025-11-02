@@ -32,11 +32,16 @@ class FrontendController:
             .order_by(asc(Slider.sort))\
             .all()
         
+        # Get home banner image from PageSettings
+        home_page_settings = PageSettings.get_or_create('home_banner')
+        home_banner = home_page_settings.banner_image
+        
         return render_template(
             'home.html',
             featured_cases=featured_cases,
             latest_news=latest_news,
-            sliders=sliders
+            sliders=sliders,
+            home_banner=home_banner
         )
     
     @staticmethod

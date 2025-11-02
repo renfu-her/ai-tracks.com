@@ -130,8 +130,12 @@
                                     <div>
                                         <h6 class="mb-1">{{ related_case.name }}</h6>
                                         {% if related_case.sub_name %}
-                                        <small class="text-muted">{{ related_case.sub_name }}</small>
+                                        <small class="text-muted d-block mb-1">{{ related_case.sub_name }}</small>
                                         {% endif %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            {{ related_case.created_at|format_date }}
+                                        </small>
                                     </div>
                                 </div>
                             </a>

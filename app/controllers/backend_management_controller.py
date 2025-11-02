@@ -708,11 +708,25 @@ class BackendManagementController:
     @admin_required
     def media():
         """Media management page - unified image management for page banners."""
-        content_type = request.args.get('type', 'all')  # all, news, contacts, categories
+        content_type = request.args.get('type', 'all')  # all, news, contacts, categories, home
         page = request.args.get('page', 1, type=int)
         per_page = 20
         
         images_data = []
+        
+        # Get Home page banner
+        if content_type in ['all', 'home']:
+            home_page = PageSettings.get_or_create('home_banner')
+            if home_page.banner_image:
+                images_data.append({
+                    'id': home_page.id,
+                    'type': 'home_banner',
+                    'type_name': '首頁',
+                    'title': '首頁 Banner',
+                    'image': home_page.banner_image,
+                    'created_at': home_page.created_at,
+                    'url': None
+                })
         
         # Get News page banner
         if content_type in ['all', 'news']:
@@ -822,7 +836,24 @@ class BackendManagementController:
                 return redirect(url_for('backend.media'))
             
             try:
-                if content_type == 'news_list':
+                if content_type == 'home_banner':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    # Delete old image
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('首頁圖片更新成功', 'success')
+                
+                elif content_type == 'news_list':
                     page_settings = PageSettings.query.get_or_404(content_id)
                     # Delete old image
                     if page_settings.banner_image:
@@ -889,7 +920,15 @@ class BackendManagementController:
             content_id = request.form.get('content_id', type=int)
             
             try:
-                if content_type == 'news_list':
+                if content_type == 'home_banner':
+                    page_settings = PageSettings.query.get_or_404(content_id)
+                    if page_settings.banner_image:
+                        ImageService.delete_image(page_settings.banner_image)
+                        page_settings.banner_image = None
+                        db.session.commit()
+                        flash('首頁圖片刪除成功', 'success')
+                
+                elif content_type == 'news_list':
                     page_settings = PageSettings.query.get_or_404(content_id)
                     if page_settings.banner_image:
                         ImageService.delete_image(page_settings.banner_image)
@@ -937,7 +976,24 @@ class BackendManagementController:
                 return redirect(url_for('backend.media'))
             
             try:
-                if content_type == 'news_list':
+                if content_type == 'home_banner':
+                    page_settings = PageSettings.get_or_create('home_banner')
+                    if page_settings.banner_image:
+                        flash('該頁面已有圖片，請使用更新功能', 'warning')
+                        return redirect(url_for('backend.media'))
+                    # Process and save new image
+                    image_path = ImageService.process_and_save(
+                        file,
+                        subfolder='page_banners',
+                        max_width=1920,
+                        max_height=1080,
+                        quality=85
+                    )
+                    page_settings.banner_image = image_path
+                    db.session.commit()
+                    flash('首頁圖片新增成功', 'success')
+                
+                elif content_type == 'news_list':
                     page_settings = PageSettings.get_or_create('news_list')
                     if page_settings.banner_image:
                         flash('該頁面已有圖片，請使用更新功能', 'warning')

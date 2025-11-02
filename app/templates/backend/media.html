@@ -11,6 +11,10 @@
                class="btn btn-sm {% if current_type == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
                 全部
             </a>
+            <a href="{{ url_for('backend.media', type='home') }}" 
+               class="btn btn-sm {% if current_type == 'home' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                首頁
+            </a>
             <a href="{{ url_for('backend.media', type='news') }}" 
                class="btn btn-sm {% if current_type == 'news' %}btn-primary{% else %}btn-outline-primary{% endif %}">
                 消息
@@ -218,6 +222,7 @@
                         <label for="addContentType" class="form-label">頁面類型 <span class="text-danger">*</span></label>
                         <select class="form-select" id="addContentType" name="content_type" required>
                             <option value="">請選擇頁面類型</option>
+                            <option value="home_banner">首頁</option>
                             <option value="news_list">消息列表頁面</option>
                             <option value="contact_list">聯絡訊息列表頁面</option>
                             <option value="category_list">類別列表頁面</option>
