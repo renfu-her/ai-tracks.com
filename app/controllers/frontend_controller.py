@@ -105,23 +105,31 @@ class FrontendController:
         # Get case with photos
         case = ProjectCase.query.filter_by(id=id, status=True).first_or_404()
         
-        # Get related cases - same category, exclude current, get 5
-        query = ProjectCase.query\
-            .filter(ProjectCase.id != id, ProjectCase.status == True)
-        
+        # Get related cases - same category only, exclude current case
+        related_cases = []
         if case.category_id:
-            # If case has category, get cases from same category
-            query = query.filter(ProjectCase.category_id == case.category_id)
+            # Only show related cases if the case has a category
+            # Get cases from same category, exclude current case
+            related_cases = ProjectCase.query\
+                .filter(
+                    ProjectCase.id != id,
+                    ProjectCase.status == True,
+                    ProjectCase.category_id == case.category_id
+                )\
+                .order_by(desc(ProjectCase.created_at))\
+                .limit(5)\
+                .all()
         
-        related_cases = query\
-            .order_by(desc(ProjectCase.created_at))\
-            .limit(5)\
-            .all()
+        # Get page banner image for category list (fallback if case has no category image)
+        page_banner = None
+        category_list_settings = PageSettings.get_or_create('category_list')
+        page_banner = category_list_settings.banner_image
         
         return render_template(
             'case_detail.html',
             case=case,
-            related_cases=related_cases
+            related_cases=related_cases,
+            page_banner=page_banner
         )
     
     @staticmethod

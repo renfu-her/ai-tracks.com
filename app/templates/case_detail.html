@@ -6,19 +6,14 @@
 
 {% block content %}
 <!-- Page Header -->
-<section class="bg-primary text-white py-5">
-    <div class="container">
+<section class="text-white py-5 position-relative" {% if case.category and case.category.image %}style="background-image: url('{{ case.category.image|storage_url }}'); background-size: cover; background-position: center;"{% elif page_banner %}style="background-image: url('{{ page_banner|storage_url }}'); background-size: cover; background-position: center;"{% else %}style="background-color: #007bff;"{% endif %}>
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0, 0, 0, 0.5);"></div>
+    <div class="container position-relative">
         <div class="row">
             <div class="col-12">
                 <h1 class="display-5 fw-bold mb-3">{{ case.name }}</h1>
                 {% if case.category %}
                 <div class="mb-3">
-                    {% if case.category.image %}
-                    <img src="{{ case.category.image|storage_url }}" 
-                         alt="{{ case.category.name }}"
-                         class="mb-2 rounded"
-                         style="max-height: 150px; width: auto;">
-                    {% endif %}
                     <span class="badge bg-light text-dark fs-6">{{ case.category.name }}</span>
                 </div>
                 {% endif %}
