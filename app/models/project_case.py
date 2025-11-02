@@ -73,7 +73,7 @@ class ProjectCase(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'case_photos': [photo.to_dict() for photo in self.case_photos.all()]
-        )
+        }
     
     def increment_views(self):
         """Increment view count."""
