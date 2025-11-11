@@ -1,9 +1,10 @@
 """Frontend controller - equivalent to Laravel's FrontendController."""
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, Response
 from sqlalchemy import desc, asc
 from app import db
 from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.forms.contact_form import ContactForm
+from datetime import datetime
 
 
 class FrontendController:
@@ -266,4 +267,91 @@ class FrontendController:
             'published_at': news.published_at.isoformat() if news.published_at else None,
             'is_active': news.is_active
         })
+    
+    @staticmethod
+    def sitemap():
+        """Generate sitemap.xml dynamically."""
+        from flask import url_for
+        
+        # Get base URL
+        base_url = request.url_root.rstrip('/')
+        
+        # Get all active cases
+        cases = ProjectCase.query.filter_by(status=True).order_by(desc(ProjectCase.updated_at)).all()
+        
+        # Get all active news
+        news_items = News.query.filter_by(is_active=True).order_by(desc(News.updated_at)).all()
+        
+        # Get all active categories
+        categories = ProductCategory.query.filter_by(status=True).order_by(asc(ProductCategory.sort_order)).all()
+        
+        # Start building XML
+        xml_lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        ]
+        
+        # Home page
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{base_url}/</loc>')
+        xml_lines.append('    <changefreq>daily</changefreq>')
+        xml_lines.append('    <priority>1.0</priority>')
+        xml_lines.append('  </url>')
+        
+        # Cases listing page
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{base_url}{url_for("frontend.cases")}</loc>')
+        xml_lines.append('    <changefreq>daily</changefreq>')
+        xml_lines.append('    <priority>0.9</priority>')
+        xml_lines.append('  </url>')
+        
+        # Category pages
+        for category in categories:
+            xml_lines.append('  <url>')
+            xml_lines.append(f'    <loc>{base_url}{url_for("frontend.cases", category=category.slug)}</loc>')
+            xml_lines.append('    <changefreq>weekly</changefreq>')
+            xml_lines.append('    <priority>0.8</priority>')
+            xml_lines.append('  </url>')
+        
+        # Case detail pages
+        for case in cases:
+            xml_lines.append('  <url>')
+            xml_lines.append(f'    <loc>{base_url}{url_for("frontend.case_detail", id=case.id)}</loc>')
+            if case.updated_at:
+                xml_lines.append(f'    <lastmod>{case.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+            xml_lines.append('    <changefreq>monthly</changefreq>')
+            xml_lines.append('    <priority>0.7</priority>')
+            xml_lines.append('  </url>')
+        
+        # News listing page
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{base_url}{url_for("frontend.news")}</loc>')
+        xml_lines.append('    <changefreq>daily</changefreq>')
+        xml_lines.append('    <priority>0.9</priority>')
+        xml_lines.append('  </url>')
+        
+        # News detail pages
+        for news_item in news_items:
+            xml_lines.append('  <url>')
+            xml_lines.append(f'    <loc>{base_url}{url_for("frontend.news_detail", id=news_item.id)}</loc>')
+            if news_item.updated_at:
+                xml_lines.append(f'    <lastmod>{news_item.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+            elif news_item.published_at:
+                xml_lines.append(f'    <lastmod>{news_item.published_at.strftime("%Y-%m-%d")}</lastmod>')
+            xml_lines.append('    <changefreq>monthly</changefreq>')
+            xml_lines.append('    <priority>0.7</priority>')
+            xml_lines.append('  </url>')
+        
+        # Contact page
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{base_url}{url_for("frontend.contact")}</loc>')
+        xml_lines.append('    <changefreq>monthly</changefreq>')
+        xml_lines.append('    <priority>0.6</priority>')
+        xml_lines.append('  </url>')
+        
+        # Close XML
+        xml_lines.append('</urlset>')
+        
+        xml_content = '\n'.join(xml_lines)
+        return Response(xml_content, mimetype='application/xml')
 

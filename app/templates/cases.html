@@ -1,10 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %}Case Studies - AI Tracks{% endblock %}
+{% block title %}Case Studies{% if category %} - {{ category.name }}{% endif %} - AI Tracks{% endblock %}
 
-{% block description %}Explore AI Tracks successful cases, including programming development, UI/UX design, website development and other professional technical solutions. Learn how we use AI technology to create value for clients.{% endblock %}
+{% block description %}{% if category %}Explore {{ category.name }} case studies from AI Tracks. {% endif %}Explore AI Tracks successful cases, including programming development, UI/UX design, website development and other professional technical solutions. Learn how we use AI technology to create value for clients.{% endblock %}
 
-{% block keywords %}case studies, programming development cases, UI/UX design cases, website development cases, AI technology cases, Laravel cases{% endblock %}
+{% block keywords %}case studies{% if category %}, {{ category.name }}{% endif %}, programming development cases, UI/UX design cases, website development cases, AI technology cases, Laravel cases{% endblock %}
+
+{% block og_title %}Case Studies{% if category %} - {{ category.name }}{% endif %} - AI Tracks{% endblock %}
+{% block og_description %}{% if category %}Explore {{ category.name }} case studies from AI Tracks. {% endif %}Explore AI Tracks successful cases, including programming development, UI/UX design, website development and other professional technical solutions.{% endblock %}
+{% block og_image %}{% if category and category.image %}{{ category.image|storage_url|external_url }}{% elif page_banner %}{{ page_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block twitter_title %}Case Studies{% if category %} - {{ category.name }}{% endif %} - AI Tracks{% endblock %}
+{% block twitter_description %}{% if category %}Explore {{ category.name }} case studies from AI Tracks. {% endif %}Explore AI Tracks successful cases, including programming development, UI/UX design, website development and other professional technical solutions.{% endblock %}
+{% block twitter_image %}{% if category and category.image %}{{ category.image|storage_url|external_url }}{% elif page_banner %}{{ page_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ url_for('frontend.cases', category=current_category if current_category else None, _external=True) }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Case Studies{% if category %} - {{ category.name }}{% endif %}",
+  "description": "{% if category %}Explore {{ category.name }} case studies from AI Tracks. {% endif %}Explore AI Tracks successful cases, including programming development, UI/UX design, website development and other professional technical solutions.",
+  "url": "{{ url_for('frontend.cases', category=current_category if current_category else None, _external=True) }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": {{ cases.total }},
+    "itemListElement": [
+      {% for case in cases.items %}
+      {
+        "@type": "ListItem",
+        "position": {{ loop.index }},
+        "item": {
+          "@type": "CreativeWork",
+          "name": "{{ case.name|e }}",
+          "url": "{{ url_for('frontend.case_detail', id=case.id, _external=True) }}"
+        }
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+{% if category %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ url_for('frontend.home', _external=True) }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Case Studies",
+      "item": "{{ url_for('frontend.cases', _external=True) }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ category.name|e }}",
+      "item": "{{ url_for('frontend.cases', category=category.slug, _external=True) }}"
+    }
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <!-- Page Header -->

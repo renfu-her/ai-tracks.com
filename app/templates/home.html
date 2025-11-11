@@ -6,6 +6,47 @@
 
 {% block keywords %}AI technology, programming development, UI/UX design, digital transformation, Laravel, web development, artificial intelligence, software development{% endblock %}
 
+{% block og_title %}AI Tracks - Professional Case Studies{% endblock %}
+{% block og_description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services. Explore our successful cases and latest technology trends.{% endblock %}
+{% block og_image %}{% if home_banner %}{{ home_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+
+{% block twitter_title %}AI Tracks - Professional Case Studies{% endblock %}
+{% block twitter_description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.{% endblock %}
+{% block twitter_image %}{% if home_banner %}{{ home_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AI Tracks",
+  "url": "{{ url_for('frontend.home', _external=True) }}",
+  "logo": "{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}",
+  "description": "Professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+886-922-013-171",
+    "contactType": "Customer Service",
+    "email": "renfu.her@gmail.com"
+  },
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AI Tracks",
+  "url": "{{ url_for('frontend.home', _external=True) }}",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ url_for('frontend.cases', _external=True) }}?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <!-- Hero Slider Section -->
 <section class="hero-slider-section">

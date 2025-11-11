@@ -6,6 +6,61 @@
 
 {% block keywords %}contact us, AI technology consulting, programming development services, UI/UX design services, digital transformation consulting, project collaboration{% endblock %}
 
+{% block og_title %}Contact Us - AI Tracks{% endblock %}
+{% block og_description %}Contact AI Tracks professional team for AI technology consulting, programming development services, UI/UX design and digital transformation solutions.{% endblock %}
+{% block og_image %}{% if page_banner %}{{ page_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block twitter_title %}Contact Us - AI Tracks{% endblock %}
+{% block twitter_description %}Contact AI Tracks professional team for AI technology consulting, programming development services, UI/UX design and digital transformation solutions.{% endblock %}
+{% block twitter_image %}{% if page_banner %}{{ page_banner|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ url_for('frontend.contact', _external=True) }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Contact Us - AI Tracks",
+  "description": "Contact AI Tracks professional team for AI technology consulting, programming development services, UI/UX design and digital transformation solutions.",
+  "url": "{{ url_for('frontend.contact', _external=True) }}",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "AI Tracks",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+886-922-013-171",
+      "contactType": "Customer Service",
+      "email": "renfu.her@gmail.com",
+      "areaServed": "TW",
+      "availableLanguage": ["en", "zh"]
+    }
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ url_for('frontend.home', _external=True) }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Contact Us",
+      "item": "{{ url_for('frontend.contact', _external=True) }}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <section class="text-white py-5 position-relative" {% if page_banner %}style="background-image: url('{{ page_banner|storage_url }}'); background-size: cover; background-position: center;"{% else %}style="background-color: #007bff;"{% endif %}>

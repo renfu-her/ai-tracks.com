@@ -1,8 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}{{ case.name }} - Case Detail - AI Tracks{% endblock %}
+{% block title %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %} - Case Detail - AI Tracks{% endblock %}
 
-{% block description %}{{ case.name }} - {{ case.sub_name|default('Professional AI technology case study') }}{% endblock %}
+{% block description %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %}. {{ case.content|striptags|truncate(150) }}{% endblock %}
+
+{% block keywords %}{{ case.name }}{% if case.category %}, {{ case.category.name }}{% endif %}, case study, programming development, UI/UX design, AI technology{% endblock %}
+
+{% block og_title %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %} - AI Tracks{% endblock %}
+{% block og_description %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %}. {{ case.content|striptags|truncate(150) }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% set first_photo = case.get_first_image() %}{% if first_photo %}{{ first_photo.image|storage_url|external_url }}{% elif case.category and case.category.image %}{{ case.category.image|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+{% block og_extra %}
+<meta property="article:published_time" content="{{ case.created_at.isoformat() }}">
+<meta property="article:modified_time" content="{{ case.updated_at.isoformat() }}">
+{% if case.category %}<meta property="article:section" content="{{ case.category.name }}">{% endif %}
+{% endblock %}
+
+{% block twitter_title %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %} - AI Tracks{% endblock %}
+{% block twitter_description %}{{ case.name }}{% if case.sub_name %} - {{ case.sub_name }}{% endif %}. {{ case.content|striptags|truncate(150) }}{% endblock %}
+{% block twitter_image %}{% set first_photo = case.get_first_image() %}{% if first_photo %}{{ first_photo.image|storage_url|external_url }}{% elif case.category and case.category.image %}{{ case.category.image|storage_url|external_url }}{% else %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ url_for('frontend.case_detail', id=case.id, _external=True) }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "{{ case.name|e }}",
+  "description": "{{ case.content|striptags|truncate(200)|e }}",
+  "url": "{{ url_for('frontend.case_detail', id=case.id, _external=True) }}",
+  "datePublished": "{{ case.created_at.isoformat() }}",
+  "dateModified": "{{ case.updated_at.isoformat() }}",
+  "author": {
+    "@type": "Organization",
+    "name": "AI Tracks"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AI Tracks",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}"
+    }
+  }{% if case.category %},
+  "about": {
+    "@type": "Thing",
+    "name": "{{ case.category.name|e }}"
+  }{% endif %}{% set first_photo = case.get_first_image() %}{% if first_photo %},
+  "image": "{{ first_photo.image|storage_url|external_url }}"{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ url_for('frontend.home', _external=True) }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Case Studies",
+      "item": "{{ url_for('frontend.cases', _external=True) }}"
+    }{% if case.category %},
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ case.category.name|e }}",
+      "item": "{{ url_for('frontend.cases', category=case.category.slug, _external=True) }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "{{ case.name|e }}",
+      "item": "{{ url_for('frontend.case_detail', id=case.id, _external=True) }}"
+    }{% else %},
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ case.name|e }}",
+      "item": "{{ url_for('frontend.case_detail', id=case.id, _external=True) }}"
+    }{% endif %}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- Page Header -->

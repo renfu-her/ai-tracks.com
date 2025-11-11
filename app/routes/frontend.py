@@ -1,10 +1,25 @@
 """Frontend routes - equivalent to Laravel's web.php routes."""
-from flask import Blueprint, send_from_directory, current_app
+from flask import Blueprint, send_from_directory, current_app, Response
 from app.controllers.frontend_controller import FrontendController
 import os
 
 # Create blueprint
 frontend_bp = Blueprint('frontend', __name__)
+
+
+@frontend_bp.route('/robots.txt')
+def robots_txt():
+    """Serve robots.txt file."""
+    from flask import request
+    base_url = request.url_root.rstrip('/')
+    robots_content = f"""User-agent: *
+Allow: /
+Disallow: /backend/
+Disallow: /backend
+
+Sitemap: {base_url}/sitemap.xml
+"""
+    return Response(robots_content, mimetype='text/plain')
 
 
 @frontend_bp.route('/uploads/<path:filename>')
@@ -74,4 +89,10 @@ def api_get_case(id):
 def api_get_news(id):
     """API endpoint for getting news data."""
     return FrontendController.get_news_api(id)
+
+
+@frontend_bp.route('/sitemap.xml')
+def sitemap_xml():
+    """Generate sitemap.xml dynamically."""
+    return FrontendController.sitemap()
 

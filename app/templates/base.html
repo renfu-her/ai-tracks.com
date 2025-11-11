@@ -13,26 +13,36 @@
     <meta name="robots" content="index, follow">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{% block og_title %}AI Tracks - Professional Case Studies{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.{% endblock %}">
-    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}{% block title %}AI Tracks - Professional Case Studies{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{% block description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.{% endblock %}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/ai-tracks-og.jpg', _external=True) }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endblock %}">
+    <meta property="og:image:width" content="{% block og_image_width %}1200{% endblock %}">
+    <meta property="og:image:height" content="{% block og_image_height %}630{% endblock %}">
     <meta property="og:site_name" content="AI Tracks">
     <meta property="og:locale" content="en_US">
+    {% block og_extra %}{% endblock %}
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}AI Tracks - Professional Case Studies{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/ai-tracks-og.jpg', _external=True) }}{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}{% block title %}AI Tracks - Professional Case Studies{% endblock %}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{% block description %}AI Tracks provides professional AI technology solutions, specializing in programming development, UI/UX design and digital transformation services.{% endblock %}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/ai-tracks.png', _external=True) }}{% endblock %}">
+    {% block twitter_extra %}{% endblock %}
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="{{ request.url }}">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.url }}{% endblock %}">
 
     <!-- Additional SEO -->
     <meta name="theme-color" content="#007bff">
     <meta name="msapplication-TileColor" content="#007bff">
+    <meta name="format-detection" content="telephone=yes">
+    <meta name="geo.region" content="TW">
+    <meta name="geo.placename" content="Taiwan">
+    
+    <!-- Structured Data (JSON-LD) -->
+    {% block structured_data %}{% endblock %}
 
     <link rel="icon" href="{{ url_for('static', filename='images/ai-tracks.png') }}" type="image/x-icon">
 

@@ -59,6 +59,35 @@ def storage_url(path):
     return url_for('frontend.uploads', filename=path)
 
 
+def external_url(url):
+    """
+    Convert relative URL to absolute URL.
+    
+    Args:
+        url: Relative URL string
+        
+    Returns:
+        Absolute URL string
+    """
+    if not url:
+        return ''
+    
+    # If already absolute URL, return as is
+    if url.startswith('http://') or url.startswith('https://'):
+        return url
+    
+    # Get base URL from request context
+    try:
+        from flask import request
+        base_url = request.url_root.rstrip('/')
+        # Remove leading slash from url if present
+        url = url.lstrip('/')
+        return f"{base_url}/{url}"
+    except RuntimeError:
+        # If not in request context, return relative URL as is
+        return url
+
+
 def format_date(date_obj, format_str='%Y-%m-%d'):
     """
     Format date object to string.
