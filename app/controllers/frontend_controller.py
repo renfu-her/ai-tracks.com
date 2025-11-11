@@ -4,7 +4,6 @@ from sqlalchemy import desc, asc
 from app import db
 from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.forms.contact_form import ContactForm
-from datetime import datetime
 
 
 class FrontendController:
@@ -318,7 +317,14 @@ class FrontendController:
             xml_lines.append('  <url>')
             xml_lines.append(f'    <loc>{base_url}{url_for("frontend.case_detail", id=case.id)}</loc>')
             if case.updated_at:
-                xml_lines.append(f'    <lastmod>{case.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+                try:
+                    # Handle both datetime and date objects
+                    if hasattr(case.updated_at, 'strftime'):
+                        xml_lines.append(f'    <lastmod>{case.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+                    else:
+                        xml_lines.append(f'    <lastmod>{str(case.updated_at)}</lastmod>')
+                except Exception:
+                    pass  # Skip lastmod if there's an error
             xml_lines.append('    <changefreq>monthly</changefreq>')
             xml_lines.append('    <priority>0.7</priority>')
             xml_lines.append('  </url>')
@@ -335,9 +341,22 @@ class FrontendController:
             xml_lines.append('  <url>')
             xml_lines.append(f'    <loc>{base_url}{url_for("frontend.news_detail", id=news_item.id)}</loc>')
             if news_item.updated_at:
-                xml_lines.append(f'    <lastmod>{news_item.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+                try:
+                    if hasattr(news_item.updated_at, 'strftime'):
+                        xml_lines.append(f'    <lastmod>{news_item.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+                    else:
+                        xml_lines.append(f'    <lastmod>{str(news_item.updated_at)}</lastmod>')
+                except Exception:
+                    pass
             elif news_item.published_at:
-                xml_lines.append(f'    <lastmod>{news_item.published_at.strftime("%Y-%m-%d")}</lastmod>')
+                try:
+                    # published_at is a Date object, not DateTime
+                    if hasattr(news_item.published_at, 'strftime'):
+                        xml_lines.append(f'    <lastmod>{news_item.published_at.strftime("%Y-%m-%d")}</lastmod>')
+                    else:
+                        xml_lines.append(f'    <lastmod>{str(news_item.published_at)}</lastmod>')
+                except Exception:
+                    pass
             xml_lines.append('    <changefreq>monthly</changefreq>')
             xml_lines.append('    <priority>0.7</priority>')
             xml_lines.append('  </url>')
