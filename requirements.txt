@@ -33,6 +33,10 @@ python-dotenv==1.0.0
 # Authentication
 Flask-Login==0.6.3
 
+# Performance Optimization
+Flask-Caching==2.1.0
+Flask-Compress==1.14
+
 # Database Drivers
 PyMySQL==1.1.0          # MySQL (required for MySQL database)
 # psycopg2-binary==2.9.9  # PostgreSQL (optional, uncomment if needed)

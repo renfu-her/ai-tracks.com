@@ -5,12 +5,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
+from flask_caching import Cache
+from flask_compress import Compress
 
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
 csrf = CSRFProtect()
 login_manager = LoginManager()
+cache = Cache()
+compress = Compress()
 
 
 @login_manager.user_loader
@@ -46,6 +50,10 @@ def create_app(config_name=None):
     login_manager.login_view = 'backend.login'
     login_manager.login_message = '請先登入以訪問此頁面'
     login_manager.login_message_category = 'info'
+    
+    # Initialize caching and compression
+    cache.init_app(app)
+    compress.init_app(app)
     
     # Configure database engine options for MySQL
     if 'mysql' in app.config['SQLALCHEMY_DATABASE_URI']:

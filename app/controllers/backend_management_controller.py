@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required
 from datetime import datetime
 from sqlalchemy import desc, asc
-from app import db
+from app import db, cache
 from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.utils.auth import admin_required
 from app.services.image_service import ImageService
@@ -14,6 +14,62 @@ from math import ceil
 
 class BackendManagementController:
     """Backend management controller for content management."""
+    
+    @staticmethod
+    def _clear_case_cache(case_id=None):
+        """Clear cache related to cases."""
+        # Clear home page cache
+        cache.delete('home')
+        # Clear sitemap cache
+        cache.delete('sitemap')
+        # Clear cases listing cache (all pages and sorts)
+        for i in range(1, 20):
+            cache.delete(f'cases_latest_None_{i}')
+            cache.delete(f'cases_oldest_None_{i}')
+            cache.delete(f'cases_name_None_{i}')
+        # Clear specific case detail cache
+        if case_id:
+            cache.delete(f'case_detail_{case_id}')
+            cache.delete(f'case_api_{case_id}')
+        else:
+            # Clear all case detail caches (approximate - clear common IDs)
+            for i in range(1, 1000):
+                cache.delete(f'case_detail_{i}')
+                cache.delete(f'case_api_{i}')
+    
+    @staticmethod
+    def _clear_news_cache(news_id=None):
+        """Clear cache related to news."""
+        # Clear home page cache
+        cache.delete('home')
+        # Clear sitemap cache
+        cache.delete('sitemap')
+        # Clear news listing cache
+        for i in range(1, 20):
+            cache.delete(f'news_list_{i}')
+        # Clear specific news detail cache
+        if news_id:
+            cache.delete(f'news_detail_{news_id}')
+            cache.delete(f'news_api_{news_id}')
+        else:
+            # Clear all news detail caches (approximate)
+            for i in range(1, 1000):
+                cache.delete(f'news_detail_{i}')
+                cache.delete(f'news_api_{i}')
+    
+    @staticmethod
+    def _clear_category_cache():
+        """Clear cache related to categories."""
+        # Clear home page cache (categories are shown there)
+        cache.delete('home')
+        # Clear sitemap cache
+        cache.delete('sitemap')
+        # Clear cases listing cache for all categories
+        # Note: This is approximate - in production, you might want to track category slugs
+        for i in range(1, 20):
+            cache.delete(f'cases_latest_None_{i}')
+            cache.delete(f'cases_oldest_None_{i}')
+            cache.delete(f'cases_name_None_{i}')
     
     # ========== Project Cases Management ==========
     
@@ -103,6 +159,8 @@ class BackendManagementController:
                             db.session.add(photo)
                 
                 db.session.commit()
+                # Clear cache after creating case
+                BackendManagementController._clear_case_cache()
                 flash('案例創建成功', 'success')
             except Exception as e:
                 db.session.rollback()
@@ -143,6 +201,9 @@ class BackendManagementController:
             db.session.add(photo)
             db.session.commit()
             
+            # Clear cache for this case
+            BackendManagementController._clear_case_cache(case_id)
+            
             return jsonify({
                 'success': True,
                 'message': '圖片上傳成功',
@@ -171,6 +232,9 @@ class BackendManagementController:
             db.session.delete(photo)
             db.session.commit()
             
+            # Clear cache for this case
+            BackendManagementController._clear_case_cache(case_id)
+            
             return jsonify({'success': True, 'message': '圖片刪除成功'})
         except Exception as e:
             db.session.rollback()
@@ -196,6 +260,8 @@ class BackendManagementController:
                         photo.sort_order = sort_order
                 
                 db.session.commit()
+                # Clear cache for this case
+                BackendManagementController._clear_case_cache(case_id)
                 return jsonify({'success': True, 'message': '排序更新成功'})
             except Exception as e:
                 db.session.rollback()
@@ -250,6 +316,8 @@ class BackendManagementController:
             
             try:
                 db.session.commit()
+                # Clear cache after updating case
+                BackendManagementController._clear_case_cache(case_id)
                 flash('案例更新成功', 'success')
             except Exception as e:
                 db.session.rollback()
@@ -265,8 +333,11 @@ class BackendManagementController:
         case = ProjectCase.query.get_or_404(case_id)
         
         try:
+            case_id = case.id
             db.session.delete(case)
             db.session.commit()
+            # Clear cache after deleting case
+            BackendManagementController._clear_case_cache(case_id)
             flash('案例刪除成功', 'success')
         except Exception as e:
             db.session.rollback()
@@ -284,6 +355,8 @@ class BackendManagementController:
         
         try:
             db.session.commit()
+            # Clear cache after toggling status
+            BackendManagementController._clear_case_cache(case_id)
             status = '啟用' if case.status else '停用'
             flash(f'案例已{status}', 'success')
         except Exception as e:
@@ -351,6 +424,8 @@ class BackendManagementController:
             try:
                 db.session.add(news)
                 db.session.commit()
+                # Clear cache after creating news
+                BackendManagementController._clear_news_cache()
                 flash('消息創建成功', 'success')
             except Exception as e:
                 db.session.rollback()
@@ -410,6 +485,8 @@ class BackendManagementController:
             
             try:
                 db.session.commit()
+                # Clear cache after updating news
+                BackendManagementController._clear_news_cache(news_id)
                 flash('消息更新成功', 'success')
             except Exception as e:
                 db.session.rollback()
@@ -429,8 +506,11 @@ class BackendManagementController:
             if news.image:
                 ImageService.delete_image(news.image)
             
+            news_id = news.id
             db.session.delete(news)
             db.session.commit()
+            # Clear cache after deleting news
+            BackendManagementController._clear_news_cache(news_id)
             flash('消息刪除成功', 'success')
         except Exception as e:
             db.session.rollback()
@@ -448,6 +528,8 @@ class BackendManagementController:
         
         try:
             db.session.commit()
+            # Clear cache after toggling status
+            BackendManagementController._clear_news_cache(news_id)
             status = '啟用' if news.is_active else '停用'
             flash(f'消息已{status}', 'success')
         except Exception as e:
@@ -597,6 +679,8 @@ class BackendManagementController:
         try:
             db.session.add(category)
             db.session.commit()
+            # Clear cache after creating category
+            BackendManagementController._clear_category_cache()
             flash('類別創建成功', 'success')
         except Exception as e:
             db.session.rollback()
@@ -671,6 +755,8 @@ class BackendManagementController:
         
         try:
             db.session.commit()
+            # Clear cache after updating category
+            BackendManagementController._clear_category_cache()
             flash('類別更新成功', 'success')
         except Exception as e:
             db.session.rollback()
@@ -694,6 +780,8 @@ class BackendManagementController:
         try:
             db.session.delete(category)
             db.session.commit()
+            # Clear cache after deleting category
+            BackendManagementController._clear_category_cache()
             flash('類別刪除成功', 'success')
         except Exception as e:
             db.session.rollback()

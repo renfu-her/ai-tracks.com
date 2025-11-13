@@ -80,6 +80,28 @@ class Config:
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    
+    # Flask-Caching Configuration
+    # Use simple cache for development, Redis/Memcached for production
+    CACHE_TYPE = os.getenv('CACHE_TYPE', 'simple')  # Options: simple, redis, memcached, filesystem
+    CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes default cache timeout
+    
+    # Redis cache configuration (if CACHE_TYPE=redis)
+    CACHE_REDIS_HOST = os.getenv('CACHE_REDIS_HOST', 'localhost')
+    CACHE_REDIS_PORT = int(os.getenv('CACHE_REDIS_PORT', 6379))
+    CACHE_REDIS_DB = int(os.getenv('CACHE_REDIS_DB', 0))
+    CACHE_REDIS_PASSWORD = os.getenv('CACHE_REDIS_PASSWORD', None)
+    
+    # Memcached configuration (if CACHE_TYPE=memcached)
+    CACHE_MEMCACHED_SERVERS = os.getenv('CACHE_MEMCACHED_SERVERS', '127.0.0.1:11211').split(',')
+    
+    # Filesystem cache configuration (if CACHE_TYPE=filesystem)
+    CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cache')
+    
+    # Flask-Compress Configuration
+    COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript', 'text/javascript', 'application/xml']
+    COMPRESS_LEVEL = 6  # Compression level (1-9, 6 is a good balance)
+    COMPRESS_MIN_SIZE = 500  # Only compress responses larger than 500 bytes
 
 
 class DevelopmentConfig(Config):
@@ -89,6 +111,8 @@ class DevelopmentConfig(Config):
     # Enable template auto-reload for development
     TEMPLATES_AUTO_RELOAD = True
     EXPLAIN_TEMPLATE_LOADING = False
+    # Disable caching in development for easier debugging
+    CACHE_TYPE = 'null'  # Disable caching in development
 
 
 class ProductionConfig(Config):
@@ -100,6 +124,10 @@ class ProductionConfig(Config):
     SECRET_KEY = os.getenv('SECRET_KEY')
     if not SECRET_KEY:
         raise ValueError("SECRET_KEY must be set in production")
+    
+    # Production caching - use Redis if available, otherwise simple cache
+    CACHE_TYPE = os.getenv('CACHE_TYPE', 'simple')
+    CACHE_DEFAULT_TIMEOUT = 600  # 10 minutes for production
 
 
 class TestingConfig(Config):

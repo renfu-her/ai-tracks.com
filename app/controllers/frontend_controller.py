@@ -1,7 +1,7 @@
 """Frontend controller - equivalent to Laravel's FrontendController."""
 from flask import render_template, request, redirect, url_for, flash, jsonify, Response
 from sqlalchemy import desc, asc
-from app import db
+from app import db, cache
 from app.models import ProjectCase, CasePhoto, News, Slider, Contact, ProductCategory, PageSettings
 from app.forms.contact_form import ContactForm
 
@@ -10,6 +10,7 @@ class FrontendController:
     """Frontend controller for handling all frontend routes."""
     
     @staticmethod
+    @cache.cached(timeout=300, key_prefix='home')  # Cache for 5 minutes
     def home():
         """Home page with featured cases, latest news, and sliders."""
         # Get featured cases (top 6, active only, with photos)
@@ -53,6 +54,14 @@ class FrontendController:
         page = request.args.get('page', 1, type=int)
         per_page = 9
         
+        # Create cache key based on query parameters
+        cache_key = f'cases_{sort}_{category_slug}_{page}'
+        
+        # Try to get from cache
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
+        
         # Base query: active cases only
         query = ProjectCase.query.filter_by(status=True)
         
@@ -84,7 +93,7 @@ class FrontendController:
             category_list_settings = PageSettings.get_or_create('category_list')
             page_banner = category_list_settings.banner_image
         
-        return render_template(
+        result = render_template(
             'cases.html',
             cases=cases_pagination,
             current_sort=sort,
@@ -92,6 +101,10 @@ class FrontendController:
             category=category,
             page_banner=page_banner
         )
+        
+        # Cache the result for 5 minutes
+        cache.set(cache_key, result, timeout=300)
+        return result
     
     @staticmethod
     def cases_by_category(category_slug):
@@ -102,6 +115,21 @@ class FrontendController:
     @staticmethod
     def case_detail(id):
         """Case detail page."""
+        # Create cache key
+        cache_key = f'case_detail_{id}'
+        
+        # Try to get from cache
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            # Still increment view count (do this outside cache)
+            case = ProjectCase.query.filter_by(id=id, status=True).first_or_404()
+            try:
+                case.views = (case.views or 0) + 1
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            return cached_result
+        
         # Get case with photos
         case = ProjectCase.query.filter_by(id=id, status=True).first_or_404()
         
@@ -132,18 +160,30 @@ class FrontendController:
         category_list_settings = PageSettings.get_or_create('category_list')
         page_banner = category_list_settings.banner_image
         
-        return render_template(
+        result = render_template(
             'case_detail.html',
             case=case,
             related_cases=related_cases,
             page_banner=page_banner
         )
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, result, timeout=300)
+        return result
     
     @staticmethod
     def news():
         """News listing page with pagination."""
         page = request.args.get('page', 1, type=int)
         per_page = 9
+        
+        # Create cache key
+        cache_key = f'news_list_{page}'
+        
+        # Try to get from cache
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
         
         # Query active news, sorted by creation date
         news_pagination = News.query\
@@ -158,11 +198,30 @@ class FrontendController:
         # Get page banner image
         news_page_settings = PageSettings.get_or_create('news_list')
         
-        return render_template('news.html', news=news_pagination, page_banner=news_page_settings.banner_image)
+        result = render_template('news.html', news=news_pagination, page_banner=news_page_settings.banner_image)
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, result, timeout=300)
+        return result
     
     @staticmethod
     def news_detail(id):
         """News detail page."""
+        # Create cache key
+        cache_key = f'news_detail_{id}'
+        
+        # Try to get from cache
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            # Still increment view count (do this outside cache)
+            news_item = News.query.filter_by(id=id, is_active=True).first_or_404()
+            try:
+                news_item.views = (news_item.views or 0) + 1
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            return cached_result
+        
         # Get news item
         news_item = News.query.filter_by(id=id, is_active=True).first_or_404()
         
@@ -180,11 +239,15 @@ class FrontendController:
             .limit(3)\
             .all()
         
-        return render_template(
+        result = render_template(
             'news_detail.html',
             news=news_item,
             related_news=related_news
         )
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, result, timeout=300)
+        return result
     
     @staticmethod
     def contact():
@@ -233,9 +296,14 @@ class FrontendController:
     @staticmethod
     def get_case_api(id):
         """API endpoint for getting case data (AJAX)."""
+        cache_key = f'case_api_{id}'
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
+        
         case = ProjectCase.query.get_or_404(id)
         
-        return jsonify({
+        result = jsonify({
             'id': case.id,
             'name': case.name,
             'sub_name': case.sub_name,
@@ -252,13 +320,22 @@ class FrontendController:
                 for photo in case.case_photos.order_by(CasePhoto.sort_order).all()
             ]
         })
+        
+        # Cache for 2 minutes
+        cache.set(cache_key, result, timeout=120)
+        return result
     
     @staticmethod
     def get_news_api(id):
         """API endpoint for getting news data (AJAX)."""
+        cache_key = f'news_api_{id}'
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
+        
         news = News.query.get_or_404(id)
         
-        return jsonify({
+        result = jsonify({
             'id': news.id,
             'title': news.title,
             'content': news.content,
@@ -266,8 +343,13 @@ class FrontendController:
             'published_at': news.published_at.isoformat() if news.published_at else None,
             'is_active': news.is_active
         })
+        
+        # Cache for 2 minutes
+        cache.set(cache_key, result, timeout=120)
+        return result
     
     @staticmethod
+    @cache.cached(timeout=3600, key_prefix='sitemap')  # Cache for 1 hour
     def sitemap():
         """Generate sitemap.xml dynamically."""
         from flask import url_for
